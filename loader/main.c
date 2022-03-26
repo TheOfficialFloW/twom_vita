@@ -210,7 +210,7 @@ int sem_wait_fake(int *uid) {
 }
 
 int sem_timedwait_fake(int *uid, const struct timespec *abstime) {
-  struct timespec now;
+  struct timespec now = {0};
   clock_gettime(0, &now);
   SceUInt timeout = (abstime->tv_sec * 1000 * 1000 + abstime->tv_nsec / 1000) - (now.tv_sec * 1000 * 1000 + now.tv_nsec / 1000);
   if (timeout < 0)
@@ -349,8 +349,6 @@ void patch_game(void) {
 
   hook_addr(so_symbol(&twom_mod, "__cxa_guard_acquire"), (uintptr_t)&__cxa_guard_acquire);
   hook_addr(so_symbol(&twom_mod, "__cxa_guard_release"), (uintptr_t)&__cxa_guard_release);
-
-  hook_addr(so_symbol(&twom_mod, "_ZN10BaseThread11SetPriorityEi"), (uintptr_t)ret0);
 
   hook_addr(so_symbol(&twom_mod, "_Z17GetApkAssetOffsetPKcRj"), (uintptr_t)ret0);
 
@@ -635,7 +633,7 @@ static so_default_dynlib default_dynlib[] = {
   { "pthread_attr_init", (uintptr_t)&ret0 },
   { "pthread_attr_setdetachstate", (uintptr_t)&ret0 },
   { "pthread_create", (uintptr_t)&pthread_create_fake },
-  // { "pthread_getschedparam", (uintptr_t)&pthread_getschedparam },
+  { "pthread_getschedparam", (uintptr_t)&pthread_getschedparam },
   { "pthread_getspecific", (uintptr_t)&pthread_getspecific },
   { "pthread_key_create", (uintptr_t)&pthread_key_create },
   { "pthread_key_delete", (uintptr_t)&pthread_key_delete },
@@ -649,7 +647,7 @@ static so_default_dynlib default_dynlib[] = {
   { "pthread_mutexattr_settype", (uintptr_t)&pthread_mutexattr_settype_fake },
   { "pthread_once", (uintptr_t)&pthread_once_fake },
   { "pthread_self", (uintptr_t)&pthread_self },
-  // { "pthread_setschedparam", (uintptr_t)&pthread_setschedparam },
+  { "pthread_setschedparam", (uintptr_t)&pthread_setschedparam },
   { "pthread_setspecific", (uintptr_t)&pthread_setspecific },
   { "putc", (uintptr_t)&putc },
   { "putwc", (uintptr_t)&putwc },
@@ -748,6 +746,8 @@ static char fake_env[0x1000];
 enum MethodIDs {
   UNKNOWN = 0,
   INIT,
+  IS_JOYSTICK_PRESENT,
+  IS_TOUCH_PRESENT,
 } MethodIDs;
 
 typedef struct {
@@ -757,9 +757,8 @@ typedef struct {
 
 static NameToMethodID name_to_method_ids[] = {
   { "<init>", INIT },
-  // IsHtcDevice
-  // GetDeviceString
-  // IsAndroidTV
+  { "IsJoystickPresent", IS_JOYSTICK_PRESENT },
+  { "IsTouchPresent", IS_TOUCH_PRESENT },
 };
 
 int GetMethodID(void *env, void *class, const char *name, const char *sig) {
@@ -789,6 +788,14 @@ void CallStaticVoidMethodV(void *env, void *obj, int methodID, uintptr_t *args) 
 }
 
 int CallStaticBooleanMethodV(void *env, void *obj, int methodID, uintptr_t *args) {
+  switch (methodID) {
+    case IS_JOYSTICK_PRESENT:
+      return 1;
+    case IS_TOUCH_PRESENT:
+      return 1;
+    default:
+      return 0;
+  }
   return 0;
 }
 
@@ -850,8 +857,8 @@ static ButtonMapping mapping[] = {
   { SCE_CTRL_TRIANGLE,  AKEYCODE_BUTTON_Y },
   { SCE_CTRL_L1,        AKEYCODE_BUTTON_L1 },
   { SCE_CTRL_R1,        AKEYCODE_BUTTON_R1 },
-  { SCE_CTRL_LEFT,      AKEYCODE_BUTTON_THUMBL },
-  { SCE_CTRL_RIGHT,     AKEYCODE_BUTTON_THUMBR },
+  // { SCE_CTRL_LEFT,      AKEYCODE_BUTTON_THUMBL },
+  // { SCE_CTRL_RIGHT,     AKEYCODE_BUTTON_THUMBR },
   { SCE_CTRL_START,     AKEYCODE_BUTTON_START },
 };
 
@@ -865,6 +872,8 @@ int ctrl_thread(SceSize args, void *argp) {
   int (* Java_com_android_Game11Bits_GameLib_keyEvent)(void *env, void *obj, int keycode, int down) = (void *)so_symbol(&twom_mod, "Java_com_android_Game11Bits_GameLib_keyEvent");
 
   Java_com_android_Game11Bits_GameLib_enableJoystick(fake_env, NULL, 1);
+
+  float lastLx = 0.0f, lastLy = 0.0f, lastRx = 0.0f, lastRy = 0.0f;
 
   int lastX[2] = { -1, -1 };
   int lastY[2] = { -1, -1 };
@@ -880,9 +889,9 @@ int ctrl_thread(SceSize args, void *argp) {
         int x = (int)((float)touch.report[i].x * (float)SCREEN_W / 1920.0f);
         int y = (int)((float)touch.report[i].y * (float)SCREEN_H / 1088.0f);
 
-        if (lastX[i] != -1 || lastY[i] != -1)
+        if (lastX[i] == -1 || lastY[i] == -1)
           Java_com_android_Game11Bits_GameLib_touchDown(fake_env, NULL, i, x, y);
-        else
+        else if (lastX[i] != x || lastY[i] != y)
           Java_com_android_Game11Bits_GameLib_touchMove(fake_env, NULL, i, x, y);
         lastX[i] = x;
         lastY[i] = y;
@@ -907,6 +916,19 @@ int ctrl_thread(SceSize args, void *argp) {
         Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, mapping[i].android_button, 1);
       if (released_buttons & mapping[i].sce_button)
         Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, mapping[i].android_button, 0);
+    }
+
+    float currLx = pad.lx >= 128-32 && pad.lx <= 128+32 ? 0.0f : ((float)pad.lx - 128.0f) / 128.0f;
+    float currLy = pad.ly >= 128-32 && pad.ly <= 128+32 ? 0.0f : ((float)pad.ly - 128.0f) / 128.0f;
+    float currRx = pad.rx >= 128-32 && pad.rx <= 128+32 ? 0.0f : ((float)pad.rx - 128.0f) / 128.0f;
+    float currRy = pad.ry >= 128-32 && pad.ry <= 128+32 ? 0.0f : ((float)pad.ry - 128.0f) / 128.0f;
+
+    if (currLx != lastLx || currLy != lastLy || currRx != lastRx || currRy != lastRy) {
+      lastLx = currLx;
+      lastLy = currLy;
+      lastRx = currRx;
+      lastRy = currRy;
+      Java_com_android_Game11Bits_GameLib_joystickEvent(fake_env, NULL, currLx, currLy, currRx, currRy, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
     sceKernelDelayThread(1000);
