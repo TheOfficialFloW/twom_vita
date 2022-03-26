@@ -121,30 +121,14 @@ int ret1(void) {
   return 1;
 }
 
-#define CLOCK_MONOTONIC 0
-int clock_gettime(int clk_id, struct timespec *tp) {
-  if (clk_id == CLOCK_MONOTONIC) {
-    SceKernelSysClock ticks;
-    sceKernelGetProcessTime(&ticks);
-
-    tp->tv_sec = ticks / (1000 * 1000);
-    tp->tv_nsec = (ticks * 1000) % (1000 * 1000 * 1000);
-
-    return 0;
-  } else if (clk_id == CLOCK_REALTIME) {
-    time_t seconds;
-    SceDateTime time;
-    sceRtcGetCurrentClockLocalTime(&time);
-
-    sceRtcGetTime_t(&time, &seconds);
-
-    tp->tv_sec = seconds;
-    tp->tv_nsec = time.microsecond * 1000;
-
-    return 0;
-  }
-
-  return -ENOSYS;
+int clock_gettime(int clk_ik, struct timespec *t) {
+  struct timeval now;
+  int rv = gettimeofday(&now, NULL);
+  if (rv)
+    return rv;
+  t->tv_sec = now.tv_sec;
+  t->tv_nsec = now.tv_usec * 1000;
+  return 0;
 }
 
 int pthread_once_fake(volatile int *once_control, void (*init_routine) (void)) {
@@ -226,11 +210,11 @@ int sem_wait_fake(int *uid) {
 }
 
 int sem_timedwait_fake(int *uid, const struct timespec *abstime) {
-  SceKernelSysClock now;
-  sceKernelGetProcessTime(&now);
-  SceKernelSysClock end = abstime->tv_sec * 1000 * 1000 + abstime->tv_nsec / 1000;
-  SceUInt timeout = end - now;
-  // printf("timeout: %d\n", timeout);
+  struct timespec now;
+  clock_gettime(0, &now);
+  SceUInt timeout = (abstime->tv_sec * 1000 * 1000 + abstime->tv_nsec / 1000) - (now.tv_sec * 1000 * 1000 + now.tv_nsec / 1000);
+  if (timeout < 0)
+    timeout = 0;
   if (sceKernelWaitSema(*uid, 1, &timeout) < 0)
     return -1;
   return 0;
@@ -249,8 +233,7 @@ void DeteremineSystemMemory(void) {
 }
 
 int FileSystem__IsAbsolutePath(void *this, const char *path) {
-  // debugPrintf("IsAbsolutePath: %s\n", path);
-  return strncmp(path, DATA_PATH, sizeof(DATA_PATH) - 1) == 0;
+  return strncmp(path, "ux0:", 4) == 0;
 }
 
 char *ShaderManager__GetShaderPath(void) {
@@ -354,18 +337,6 @@ void PresentGLContext(void) {
 extern void *__cxa_guard_acquire;
 extern void *__cxa_guard_release;
 
-int GameConsolePrint(void *a1, int a2, int a3, const char *format, ...) {
-	char str[512] = { 0 };
-	va_list va;
-
-	va_start(va, format);
-	vsnprintf(str, 512, format, va);
-	va_end(va);
-
-	printf(str);
-	printf("\n");
-}
-
 void patch_game(void) {
   FileReader__Constructor = (void *)so_symbol(&twom_mod, "_ZN10FileReaderC2EPKcS1_S1_j");
   FileReader__Deconstructor = (void *)so_symbol(&twom_mod, "_ZN10FileReaderD2Ev");
@@ -389,8 +360,10 @@ void patch_game(void) {
   hook_addr(so_symbol(&twom_mod, "_ZN14GoogleServices10IsSignedInEv"), (uintptr_t)ret0);
   hook_addr(so_symbol(&twom_mod, "_Z12SetGLContextv"), (uintptr_t)ret0);
   hook_addr(so_symbol(&twom_mod, "_Z16PresentGLContextv"), (uintptr_t)PresentGLContext);
-  
-  hook_addr(so_symbol(&twom_mod, "_ZN11GameConsole5PrintEhhPKcz"), (uintptr_t)GameConsolePrint);
+
+  hook_addr(so_symbol(&twom_mod, "_ZN11GameConsole5PrintEhhPKcz"), (uintptr_t)ret0);
+  hook_addr(so_symbol(&twom_mod, "_ZN11GameConsole12PrintWarningEhPKcz"), (uintptr_t)ret0);
+  hook_addr(so_symbol(&twom_mod, "_ZN11GameConsole10PrintErrorEhPKcz"), (uintptr_t)ret0);
 }
 
 extern void *__aeabi_atexit;
@@ -411,13 +384,6 @@ static char *__ctype_ = (char *)&_ctype_;
 
 static FILE __sF_fake[0x100][3];
 
-FILE *fopen_hook(const char *filename, const char *mode) {
-  FILE *file = fopen(filename, mode);
-  if (!file)
-    debugPrintf("fopen %s: %p\n", filename, file);
-  return file;
-}
-
 int stat_hook(const char *pathname, void *statbuf) {
   struct stat st;
   int res = stat(pathname, &st);
@@ -436,25 +402,6 @@ void glCompressedTexImage2DHook(GLenum target, GLint level, GLenum format, GLsiz
   // mips for PVRTC textures break when they're under 1 block in size
   if (level == 0)
     glCompressedTexImage2D(target, level, format, width, height, border, imageSize, data);
-}
-
-void dump_file(const char *fname, const GLchar *const *string, int count) {
-	FILE *f = fopen(fname, "w+");
-	char header[64];
-	for (int i = 0; i < count; i++) {
-		sprintf(header, "// part %d\n\n", i);
-		fwrite(header , 1, strlen(header), f);
-		fwrite(string[i], 1, strlen(string[i]), f);
-	}
-	fclose(f);
-}
-
-void glShaderSourceHook(GLuint handle, GLsizei count, const GLchar *const *string, const GLint *length) {
-	printf("dumping shader %X with count %d and length %X\n", handle, count, length);
-	char fname[64] = {};
-	sprintf(fname, "ux0:data/twom/shad_%X.txt", handle);
-	dump_file(fname, string, count);
-	glShaderSource(handle, count, string, length);
 }
 
 static so_default_dynlib default_dynlib[] = {
@@ -568,7 +515,7 @@ static so_default_dynlib default_dynlib[] = {
   { "floorf", (uintptr_t)&floorf },
   { "fmod", (uintptr_t)&fmod },
   { "fmodf", (uintptr_t)&fmodf },
-  { "fopen", (uintptr_t)&fopen_hook },
+  { "fopen", (uintptr_t)&fopen },
   { "fprintf", (uintptr_t)&fprintf },
   { "fputc", (uintptr_t)&fputc },
   { "fputs", (uintptr_t)&fputs },
@@ -765,7 +712,7 @@ static so_default_dynlib default_dynlib[] = {
   { "towupper", (uintptr_t)&towupper },
   { "ungetc", (uintptr_t)&ungetc },
   { "ungetwc", (uintptr_t)&ungetwc },
-  { "usleep", (uintptr_t)&ret0 },
+  { "usleep", (uintptr_t)&usleep },
   { "vsnprintf", (uintptr_t)&vsnprintf },
   { "vsprintf", (uintptr_t)&vsprintf },
   { "vswprintf", (uintptr_t)&vswprintf },
@@ -969,7 +916,6 @@ int ctrl_thread(SceSize args, void *argp) {
 }
 
 int main(int argc, char *argv[]) {
-	// sceSysmoduleLoadModule(9);
   sceCtrlSetSamplingModeExt(SCE_CTRL_MODE_ANALOG_WIDE);
   sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
   sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK, SCE_TOUCH_SAMPLING_STATE_START);

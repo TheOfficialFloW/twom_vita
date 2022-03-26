@@ -63,6 +63,6 @@ vita_create_vpk(TWOM.vpk ${VITA_TITLEID} eboot.bin
 )
 
 add_custom_target(copy
-  COMMAND cp eboot.bin E:/app/${VITA_TITLEID}/eboot.bin
+  COMMAND cp eboot.bin D:/app/${VITA_TITLEID}/eboot.bin
   DEPENDS eboot.bin
 )
