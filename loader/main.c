@@ -366,6 +366,41 @@ int GameConsolePrint(void *a1, int a2, int a3, const char *format, ...) {
 	printf("\n");
 }
 
+int GameConsolePrintError(void *a1, int a2, const char *format, ...) {
+	char str[512] = { 0 };
+	va_list va;
+
+	va_start(va, format);
+	vsnprintf(str, 512, format, va);
+	va_end(va);
+    
+	printf("ERROR: ");
+	printf(str);
+	printf("\n");
+	return 0;
+}
+
+int GameConsolePrintWarning(void *a1, int a2, const char *format, ...) {
+	char str[512] = { 0 };
+	va_list va;
+
+	va_start(va, format);
+	vsnprintf(str, 512, format, va);
+	va_end(va);
+    
+	printf("WARNING: ");
+	printf(str);
+	printf("\n");
+	return 0;
+}
+
+int (* SetGFXQualityLevel_orig) (int a1, uint32_t a2);
+
+int SetGFXQualityLevel(void *this, uint32_t a2) {
+	// 0 = ultra low, 1 = low, 2 = medium, 3 = high, 4 = ultra
+	return SetGFXQualityLevel_orig(this, 4);
+}
+
 void patch_game(void) {
   FileReader__Constructor = (void *)so_symbol(&twom_mod, "_ZN10FileReaderC2EPKcS1_S1_j");
   FileReader__Deconstructor = (void *)so_symbol(&twom_mod, "_ZN10FileReaderD2Ev");
@@ -390,7 +425,12 @@ void patch_game(void) {
   hook_addr(so_symbol(&twom_mod, "_Z12SetGLContextv"), (uintptr_t)ret0);
   hook_addr(so_symbol(&twom_mod, "_Z16PresentGLContextv"), (uintptr_t)PresentGLContext);
   
-  hook_addr(so_symbol(&twom_mod, "_ZN11GameConsole5PrintEhhPKcz"), (uintptr_t)GameConsolePrint);
+  //hook_addr(so_symbol(&twom_mod, "_ZN11GameConsole5PrintEhhPKcz"), (uintptr_t)GameConsolePrint);
+  //hook_addr(so_symbol(&twom_mod, "_ZN11GameConsole12PrintWarningEhPKcz"), (uintptr_t)GameConsolePrintWarning);
+  //hook_addr(so_symbol(&twom_mod, "_ZN11GameConsole10PrintErrorEhPKcz"), (uintptr_t)GameConsolePrintError);
+  
+  //hook_addr((void *)(twom_mod.text_base + 0x0035E9E0), (uintptr_t)SetGFXQualityLevel);
+  //SetGFXQualityLevel_orig = so_symbol(&twom_mod, "_ZN14LiquidRenderer20__SetGFXQualityLevelEj");
 }
 
 extern void *__aeabi_atexit;
