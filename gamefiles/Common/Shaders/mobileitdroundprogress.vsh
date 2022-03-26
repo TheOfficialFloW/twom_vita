@@ -1,0 +1,34 @@
+uniform float4x4 ViewProjMatrix;
+uniform float4 GlobalFogParams;
+
+uniform float4x4 ModelMatrix;
+
+uniform float4 MappingTransform;
+uniform float4 DiffuseColor;
+
+void main(
+    float3 Position,
+    float2 UV0,
+
+    float2 out uv0Varying : TEXCOORD0,
+    float4 out colorVarying : COLOR0,
+    float2 out uvCutoffAndFog : TEXCOORD1,
+    float4 out gl_Position : POSITION
+) {
+    float4 pos4 = float4(Position,1.0);
+    float3 posWS = (mul(pos4, ModelMatrix)).xyz;
+    
+    gl_Position=mul(float4(posWS,1.0), ViewProjMatrix);
+    uv0Varying = UV0 * MappingTransform.xy + MappingTransform.zw;
+    
+    float4 color = DiffuseColor;
+    
+#ifdef FOG
+    float fog = posWS.y * GlobalFogParams.x + GlobalFogParams.y;
+#else
+    float fog = 0.0;
+#endif
+    
+    uvCutoffAndFog = float2(color.w - uv0Varying.y, fog);
+    colorVarying = float4(color.xyz,1);
+}
