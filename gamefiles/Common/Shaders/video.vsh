@@ -9,7 +9,7 @@ void main(
 ) {
     float4 uvOffsets  = UserVSHParams[ 0 ];
     float4 posScale   = UserVSHParams[ 1 ];
-    gl_Position		= float4( Position, 1. );
+    gl_Position		= float4( Position, 1.f );
     gl_Position.xy *= posScale.xy;
     uv0Varying.xy	= UV0 * uvOffsets.xy + uvOffsets.zw;
 }

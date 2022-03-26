@@ -13,7 +13,7 @@ void main(
 
     gl_Position = float4(pos,1);
 
-    float2 uv=UV0*float2(1,-1)+float2(0,1);
+    float2 uv = float2(UV0.x, 1.0f - UV0.y);
     uv = uv * UVOffsets.xy + UVOffsets.zw;
     
 	uv0Varying.xy = uv + SampleOffsets.xy;

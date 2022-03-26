@@ -11,14 +11,14 @@ void main(
     float2 UV0,
 
     float2 out uv0Varying : TEXCOORD0,
-    float4 out colorVarying : COLOR0,
+    float4 out colorVarying : TEXCOORD8,
     float2 out uvCutoffAndFog : TEXCOORD1,
     float4 out gl_Position : POSITION
 ) {
-    float4 pos4 = float4(Position,1.0);
+    float4 pos4 = float4(Position,1.0f);
     float3 posWS = (mul(pos4, ModelMatrix)).xyz;
     
-    gl_Position=mul(float4(posWS,1.0), ViewProjMatrix);
+    gl_Position=mul(float4(posWS,1.0f), ViewProjMatrix);
     uv0Varying = UV0 * MappingTransform.xy + MappingTransform.zw;
     
     float4 color = DiffuseColor;
@@ -26,9 +26,9 @@ void main(
 #ifdef FOG
     float fog = posWS.y * GlobalFogParams.x + GlobalFogParams.y;
 #else
-    float fog = 0.0;
+    float fog = 0.0f;
 #endif
     
     uvCutoffAndFog = float2(color.w - uv0Varying.y, fog);
-    colorVarying = float4(color.xyz,1);
+    colorVarying = float4(color.xyz,1.0f);
 }

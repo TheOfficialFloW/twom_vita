@@ -33,9 +33,9 @@ void main(
 #endif
 
     // float4 out Varying_Normal : TEXCOORD0,
-    float4 out Varying_Color : COLOR0,
+    float4 out Varying_Color : TEXCOORD8,
     float2 out Varying_UV : TEXCOORD0,
-    float out Varying_Fog : TEXCOORD1,
+    float2 out Varying_Fog : TEXCOORD1,
     // float out Varying_ToneMap : TEXCOORD1,
     float4 out gl_Position : POSITION
 ) {
@@ -78,8 +78,8 @@ void main(
 #endif
     
 #ifdef FOG
-    Varying_Fog = posWS.y * GlobalFogParams.x + GlobalFogParams.y;
+    Varying_Fog.x = posWS.y * GlobalFogParams.x + GlobalFogParams.y;
 #else
-    Varying_Fog = 0.0;
+    Varying_Fog.x = 0.0f;
 #endif
 }

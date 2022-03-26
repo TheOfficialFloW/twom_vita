@@ -8,12 +8,11 @@ void main(
     float2 UV0,
 
     float4 out uv0Varying : TEXCOORD0,
-    float4 out colorVarying : COLOR0,
+    float4 out colorVarying : TEXCOORD8,
     float4 out gl_Position : POSITION
 ) {
-	float3 pos=Position;
-    gl_Position = mul(float4(pos,1), ModelViewProjMatrix);
+    gl_Position = mul(float4(Position,1.f), ModelViewProjMatrix);
 
     uv0Varying = UV0.xyxy*MappingScale+MappingOffset;
-	colorVarying = ConstantColor;
+    colorVarying = ConstantColor;
 }

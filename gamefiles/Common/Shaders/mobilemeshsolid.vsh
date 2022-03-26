@@ -16,6 +16,11 @@ uniform float4 VSHSunFrontColor;
 
 uniform float4 BoneMatrices[64 * 3];
 
+float EncodeKosovoFakeDepth(float worldSpaceY)
+{
+    return (clamp(worldSpaceY, -4.0f, 4.0f) + 4.0f) / 8.0f;
+}
+
 void ComputeSkinningMatrix(float4 indices, float4 weights, out float4 va, out float4 vb, out float4 vc)
 {
     int4 bix        = int4(indices)*3;
@@ -41,14 +46,14 @@ void main(
 #endif
 
     // float4 out Varying_Normal : TEXCOORD0,
-    float3 out Varying_Color : COLOR0,
+    float3 out Varying_Color : TEXCOORD8,
     float2 out Varying_UV : TEXCOORD0,
-    float out Varying_Fog : TEXCOORD1,
+    float2 out Varying_Fog : TEXCOORD1,
     // float out Varying_ToneMap : TEXCOORD1,
-    float3 out Varying_Diffuse : COLOR1,
+    float3 out Varying_Diffuse : TEXCOORD9,
 
 #ifdef KOSOVO_SOFTNESS_DEPTH_IN_ALPHA
-    float out Varying_SoftnessDepth : TEXCOORD2,
+    float2 out Varying_SoftnessDepth : TEXCOORD2,
 #endif
 
 #ifdef ENV_MAP
@@ -95,7 +100,7 @@ void main(
     float4 posWS4 = mul(pos, ModelMatrix);
     float3 posWS = posWS4.xyz;
     
-    Varying_Fog = posWS.y * GlobalFogParams.x + GlobalFogParams.y;
+    Varying_Fog.x = posWS.y * GlobalFogParams.x + GlobalFogParams.y;
     
     // sun
     
@@ -140,6 +145,6 @@ void main(
     //todo: specular
     
 #ifdef KOSOVO_SOFTNESS_DEPTH_IN_ALPHA
-    Varying_SoftnessDepth = EncodeKosovoFakeDepth(posWS.y);
+    Varying_SoftnessDepth.x = EncodeKosovoFakeDepth(posWS.y);
 #endif
 }

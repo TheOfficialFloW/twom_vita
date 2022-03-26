@@ -6,10 +6,8 @@ float4 main(
 #if defined(TEXTURE)
 	float2 uv0Varying : TEXCOORD0,
 #endif
-    float4 colorVarying : COLOR0
+    float4 colorVarying : TEXCOORD8
 ) {
-    float4 gl_FragColor = float4(0, 0, 0, 0);
-
 	float4 color = colorVarying;
 	
 #ifdef TEXTURE
@@ -24,6 +22,5 @@ float4 main(
 	#endif
 #endif
 
-	gl_FragColor = color;
-    return gl_FragColor;
+    return color;
 }

@@ -5,8 +5,6 @@ void main(
     float2 out uv0Varying : TEXCOORD0,
     float4 out gl_Position : POSITION
 ) {
-	float3 pos=Position;
-	gl_Position=float4(pos,1);
-
+	gl_Position=float4(Position,1.f);
 	uv0Varying = UV0;
 }
