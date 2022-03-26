@@ -4,7 +4,7 @@ uniform float4 GlobalFogColor;
 
 float4 main(
     float2 uv0Varying : TEXCOORD0,
-    float4 colorVarying : COLOR0,
+    float4 colorVarying : TEXCOORD8,
     float2 uvCutoffAndFog : TEXCOORD1
 ) {
 	float4 color=colorVarying;

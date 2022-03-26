@@ -2,7 +2,7 @@ uniform sampler2D Texture0;
 uniform float4 OutlineColor;
 
 float4 main(
-    float4 colorVarying : COLOR0,
+    float4 colorVarying : TEXCOORD8,
     float2 uv0Varying : TEXCOORD0
 ) {
     float4 color=colorVarying;

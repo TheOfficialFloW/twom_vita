@@ -7,7 +7,7 @@ void main(
     float4 Color,
     float4 UV0,
 
-    float4 out colorVarying : COLOR0,
+    float4 out colorVarying : TEXCOORD8,
     float4 out uv0Varying : TEXCOORD0,
     float2 out frameFactorFog : TEXCOORD1,
     float4 out gl_Position : POSITION

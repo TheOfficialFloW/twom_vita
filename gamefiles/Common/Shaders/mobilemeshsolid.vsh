@@ -46,11 +46,11 @@ void main(
 #endif
 
     // float4 out Varying_Normal : TEXCOORD0,
-    float3 out Varying_Color : COLOR0,
+    float3 out Varying_Color : TEXCOORD8,
     float2 out Varying_UV : TEXCOORD0,
     float2 out Varying_Fog : TEXCOORD1,
     // float out Varying_ToneMap : TEXCOORD1,
-    float3 out Varying_Diffuse : COLOR1,
+    float3 out Varying_Diffuse : TEXCOORD9,
 
 #ifdef KOSOVO_SOFTNESS_DEPTH_IN_ALPHA
     float2 out Varying_SoftnessDepth : TEXCOORD2,

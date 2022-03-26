@@ -7,7 +7,7 @@ uniform float4 GlobalFogColor;
 uniform float4 ComboDesaturationAlphaTest;
 
 float4 main(
-    float4 colorVarying : COLOR0,
+    float4 colorVarying : TEXCOORD8,
     float4 uv0Varying : TEXCOORD0,
     float2 frameFactorFog : TEXCOORD1
 ) {

@@ -20,7 +20,7 @@ float4 main(
     float2 Varying_MaskUV1 : TEXCOORD3,
     float2 Varying_VignetteUV : TEXCOORD4,
 
-    float3 Varying_ScreenColor : COLOR0
+    float3 Varying_ScreenColor : TEXCOORD8
 ) {
     float4 color = tex2D(Texture0, Varying_MainUV);
 

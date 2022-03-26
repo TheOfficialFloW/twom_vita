@@ -13,7 +13,7 @@ void main(
     float2 out Varying_MaskUV0 : TEXCOORD2,
     float2 out Varying_MaskUV1 : TEXCOORD3,
     float2 out Varying_VignetteUV : TEXCOORD4,
-    float3 out Varying_ScreenColor : COLOR0,
+    float3 out Varying_ScreenColor : TEXCOORD8,
     float4 out gl_Position : POSITION
 ) {
     float4 pos4 = float4(Position, 1.0f);

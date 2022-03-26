@@ -13,10 +13,10 @@ uniform samplerCUBE Texture3; //envmap
 uniform sampler2D Texture7; //lightmap
 
 float4 main(
-    float3 Varying_Color : COLOR0,
+    float3 Varying_Color : TEXCOORD8,
     float2 Varying_UV : TEXCOORD0,
     float2 Varying_Fog : TEXCOORD1,
-    float3 Varying_Diffuse : COLOR1,
+    float3 Varying_Diffuse : TEXCOORD9,
 
 #ifdef KOSOVO_SOFTNESS_DEPTH_IN_ALPHA
     float2 Varying_SoftnessDepth : TEXCOORD2,

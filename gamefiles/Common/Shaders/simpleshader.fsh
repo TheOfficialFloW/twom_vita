@@ -6,7 +6,7 @@ float4 main(
 #if defined(TEXTURE)
 	float2 uv0Varying : TEXCOORD0,
 #endif
-    float4 colorVarying : COLOR0
+    float4 colorVarying : TEXCOORD8
 ) {
 	float4 color = colorVarying;
 	

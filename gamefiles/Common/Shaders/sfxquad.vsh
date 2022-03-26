@@ -8,7 +8,7 @@ void main(
     float2 UV0,
 
     float4 out uv0Varying : TEXCOORD0,
-    float4 out colorVarying : COLOR0,
+    float4 out colorVarying : TEXCOORD8,
     float4 out gl_Position : POSITION
 ) {
     gl_Position = mul(float4(Position,1.f), ModelViewProjMatrix);

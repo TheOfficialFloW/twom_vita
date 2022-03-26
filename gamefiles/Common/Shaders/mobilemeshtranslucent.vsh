@@ -33,7 +33,7 @@ void main(
 #endif
 
     // float4 out Varying_Normal : TEXCOORD0,
-    float4 out Varying_Color : COLOR0,
+    float4 out Varying_Color : TEXCOORD8,
     float2 out Varying_UV : TEXCOORD0,
     float2 out Varying_Fog : TEXCOORD1,
     // float out Varying_ToneMap : TEXCOORD1,

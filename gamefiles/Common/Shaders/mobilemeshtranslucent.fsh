@@ -5,7 +5,7 @@ uniform float4 GlobalFogColor;
 uniform sampler2D Texture0;
 
 float4 main(
-    float4 Varying_Color : COLOR0,
+    float4 Varying_Color : TEXCOORD8,
     float2 Varying_UV : TEXCOORD0,
     float2 Varying_Fog : TEXCOORD1
 ) {

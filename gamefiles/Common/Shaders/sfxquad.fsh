@@ -5,7 +5,7 @@ uniform float4 AlphaTest;
 
 float4 main(
     float4 uv0Varying : TEXCOORD0,
-    float4 colorVarying : COLOR0
+    float4 colorVarying : TEXCOORD8
 ) {
     float4 color=colorVarying;
     float4 txt=tex2D(Texture0,uv0Varying.xy);

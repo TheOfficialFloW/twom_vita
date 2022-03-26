@@ -9,7 +9,7 @@ void main(
 #endif
     float4 Color,
 
-    float4 out colorVarying : COLOR0,
+    float4 out colorVarying : TEXCOORD8,
 #if defined(TEXTURE)
     float2 out uv0Varying : TEXCOORD0,
 #endif

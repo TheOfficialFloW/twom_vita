@@ -7,7 +7,7 @@ void main(
     float3 Position,
 
     float2 out uvVarying : TEXCOORD0,
-    float4 out colorVarying : COLOR0,
+    float4 out colorVarying : TEXCOORD8,
     float4 out gl_Position : POSITION
 ) {
 	float width=GraphParams.x;
