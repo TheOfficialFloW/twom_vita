@@ -9,14 +9,12 @@ void main(
     float4 out Varying_blurUV0 : TEXCOORD0,
     float4 out Varying_blurUV1 : TEXCOORD1,
     float4 out Varying_blurUV2 : TEXCOORD2,
-    float4 out Varying_blurUV3 : TEXCOORD3,
+    float2 out Varying_blurUV3 : TEXCOORD3,
     float4 out gl_Position : POSITION
 ) {
-	float4 pos4 = float4(Position,1.0);
+    gl_Position = float4(Position,1.0f);
 
-    gl_Position = pos4;
-
-    float2 uv = pos4.xy * PosToUV.xy + PosToUV.zw;
+    float2 uv = Position.xy * PosToUV.xy + PosToUV.zw;
     
     Varying_blurUV0.xy = uv + BlurUVGenParams[0].x * KernelSize.xy;
     Varying_blurUV0.zw = uv + BlurUVGenParams[0].y * KernelSize.xy;

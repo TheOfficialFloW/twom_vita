@@ -6,9 +6,8 @@ void main(
     float2 out screenPosVarying : TEXCOORD0,
     float4 out gl_Position : POSITION
 ) {
-    float4 pos4 = mul(float4(Position,1.0), ModelViewProjMatrix);
-    
-    screenPosVarying = (pos4.xy / pos4.w) * 0.5 + float2(0.5,0.5);
-    
-    gl_Position = pos4;
+	gl_Position = mul(float4(Position,1.0f), ModelViewProjMatrix);
+    screenPosVarying = (gl_Position.xy / gl_Position.w) * 0.5f;
+	screenPosVarying.x += 0.5f;
+	screenPosVarying.y += 0.5f;
 }

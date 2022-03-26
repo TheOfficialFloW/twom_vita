@@ -15,8 +15,7 @@ void main(
 #endif
     float4 out gl_Position : POSITION
 ) {
-	float3 pos=Position;
-    gl_Position = mul(float4(pos,1), ModelViewProjMatrix);
+    gl_Position = mul(float4(Position,1.f), ModelViewProjMatrix);
 
     colorVarying=DiffuseColor;
 #ifdef VERTEX_COLOR

@@ -16,17 +16,17 @@ void main(
     float3 out Varying_ScreenColor : COLOR0,
     float4 out gl_Position : POSITION
 ) {
-    float4 pos4 = float4(Position, 1.0);
-    float2 uv = UV0 * float2(1, -1) + float2(0, 1);
+    float4 pos4 = float4(Position, 1.0f);
+    UV0.y = 1.0f - UV0.y;
     
-    Varying_MainUV = uv * UVOffset.xy + UVOffset.zw;
-	Varying_GlowUV = uv * GlowUVOffset.xy + GlowUVOffset.zw;
+    Varying_MainUV = UV0 * UVOffset.xy + UVOffset.zw;
+    Varying_GlowUV = UV0 * GlowUVOffset.xy + GlowUVOffset.zw;
     Varying_MaskUV0 = float2(dot(pos4,CustomVSHParams[2]),dot(pos4,CustomVSHParams[3]));
     Varying_MaskUV1 = float2(dot(pos4,CustomVSHParams[0]),dot(pos4,CustomVSHParams[1]));
-    Varying_VignetteUV = uv * VignetteUVOffset.xy + VignetteUVOffset.zw;
+    Varying_VignetteUV = UV0 * VignetteUVOffset.xy + VignetteUVOffset.zw;
 
-	float4 sc = lerp(UserVSHParams[0], UserVSHParams[1], 1.0 - Varying_MainUV.y);
-	Varying_ScreenColor = lerp(float3(1.0), sc.xyz, sc.w);
+    float4 sc = lerp(UserVSHParams[0], UserVSHParams[1], 1.0f - Varying_MainUV.y);
+    Varying_ScreenColor = lerp(float3(1.0f,1.0f,1.0f), sc.xyz, sc.w);
 
     gl_Position = pos4;
 }

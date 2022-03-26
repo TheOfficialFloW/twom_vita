@@ -1,12 +1,9 @@
 uniform float4 LightColor;
 
 float4 main() {
-    float4 gl_FragColor = float4(0, 0, 0, 0);
-
 #ifdef POINT
-    gl_FragColor = LightColor;
+    return LightColor;
 #else
-    gl_FragColor = float4(0.0, 0.0, 0.0, 0.0);
+    return float4(0.0f, 0.0f, 0.0f, 0.0f);
 #endif
-    return gl_FragColor;
 }
