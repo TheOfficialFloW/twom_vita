@@ -355,50 +355,50 @@ extern void *__cxa_guard_acquire;
 extern void *__cxa_guard_release;
 
 int GameConsolePrint(void *a1, int a2, int a3, const char *format, ...) {
-	char str[512] = { 0 };
-	va_list va;
+  char str[512] = { 0 };
+  va_list va;
 
-	va_start(va, format);
-	vsnprintf(str, 512, format, va);
-	va_end(va);
+  va_start(va, format);
+  vsnprintf(str, 512, format, va);
+  va_end(va);
 
-	printf(str);
-	printf("\n");
+  printf(str);
+  printf("\n");
 }
 
 int GameConsolePrintError(void *a1, int a2, const char *format, ...) {
-	char str[512] = { 0 };
-	va_list va;
+  char str[512] = { 0 };
+  va_list va;
 
-	va_start(va, format);
-	vsnprintf(str, 512, format, va);
-	va_end(va);
+  va_start(va, format);
+  vsnprintf(str, 512, format, va);
+  va_end(va);
     
-	printf("ERROR: ");
-	printf(str);
-	printf("\n");
-	return 0;
+  printf("ERROR: ");
+  printf(str);
+  printf("\n");
+  return 0;
 }
 
 int GameConsolePrintWarning(void *a1, int a2, const char *format, ...) {
-	char str[512] = { 0 };
-	va_list va;
+  char str[512] = { 0 };
+  va_list va;
 
-	va_start(va, format);
-	vsnprintf(str, 512, format, va);
-	va_end(va);
+  va_start(va, format);
+  vsnprintf(str, 512, format, va);
+  va_end(va);
     
-	printf("WARNING: ");
-	printf(str);
-	printf("\n");
-	return 0;
+  printf("WARNING: ");
+  printf(str);
+  printf("\n");
+  return 0;
 }
 
 int (* SetGFXQualityLevel_orig) (int a1, uint32_t a2);
 
 int SetGFXQualityLevel(void *this, uint32_t a2) {
-	// 0 = ultra low, 1 = low, 2 = medium, 3 = high, 4 = ultra
-	return SetGFXQualityLevel_orig(this, 4);
+  // 0 = ultra low, 1 = low, 2 = medium, 3 = high, 4 = ultra
+  return SetGFXQualityLevel_orig(this, 4);
 }
 
 void patch_game(void) {
@@ -479,22 +479,22 @@ void glCompressedTexImage2DHook(GLenum target, GLint level, GLenum format, GLsiz
 }
 
 void dump_file(const char *fname, const GLchar *const *string, int count) {
-	FILE *f = fopen(fname, "w+");
-	char header[64];
-	for (int i = 0; i < count; i++) {
-		sprintf(header, "// part %d\n\n", i);
-		fwrite(header , 1, strlen(header), f);
-		fwrite(string[i], 1, strlen(string[i]), f);
-	}
-	fclose(f);
+  FILE *f = fopen(fname, "w+");
+  char header[64];
+  for (int i = 0; i < count; i++) {
+    sprintf(header, "// part %d\n\n", i);
+    fwrite(header , 1, strlen(header), f);
+    fwrite(string[i], 1, strlen(string[i]), f);
+  }
+  fclose(f);
 }
 
 void glShaderSourceHook(GLuint handle, GLsizei count, const GLchar *const *string, const GLint *length) {
-	printf("dumping shader %X with count %d and length %X\n", handle, count, length);
-	char fname[64] = {};
-	sprintf(fname, "ux0:data/twom/shad_%X.txt", handle);
-	dump_file(fname, string, count);
-	glShaderSource(handle, count, string, length);
+  printf("dumping shader %X with count %d and length %X\n", handle, count, length);
+  char fname[64] = {};
+  sprintf(fname, "ux0:data/twom/shad_%X.txt", handle);
+  dump_file(fname, string, count);
+  glShaderSource(handle, count, string, length);
 }
 
 static so_default_dynlib default_dynlib[] = {
@@ -1009,7 +1009,7 @@ int ctrl_thread(SceSize args, void *argp) {
 }
 
 int main(int argc, char *argv[]) {
-	// sceSysmoduleLoadModule(9);
+  // sceSysmoduleLoadModule(9);
   sceCtrlSetSamplingModeExt(SCE_CTRL_MODE_ANALOG_WIDE);
   sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
   sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK, SCE_TOUCH_SAMPLING_STATE_START);
