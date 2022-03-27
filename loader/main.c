@@ -1011,8 +1011,21 @@ int main(int argc, char *argv[]) {
   if (!file_exists("ur0:/data/libshacccg.suprx") && !file_exists("ur0:/data/external/libshacccg.suprx"))
     fatal_error("Error libshacccg.suprx is not installed.");
 
-  if (so_load(&twom_mod, SO_PATH, LOAD_ADDRESS) < 0)
-    fatal_error("Error could not load %s.", SO_PATH);
+  // Check if we want to start TWoM: Stories
+  int stories_mode = 0;
+  sceAppUtilInit(&(SceAppUtilInitParam){}, &(SceAppUtilBootParam){});
+  SceAppUtilAppEventParam eventParam;
+  sceClibMemset(&eventParam, 0, sizeof(SceAppUtilAppEventParam));
+  sceAppUtilReceiveAppEvent(&eventParam);
+  if (eventParam.type == 0x05) {
+    char buffer[2048];
+    sceAppUtilAppEventParseLiveArea(&eventParam, buffer);
+    if (strstr(buffer, "stories"))
+      stories_mode = 1;
+  }
+
+  if (so_load(&twom_mod, stories_mode ? SO_DLC_PATH : SO_PATH, LOAD_ADDRESS) < 0)
+    fatal_error("Error could not load %s.", stories_mode ? SO_DLC_PATH : SO_PATH);
 
   so_relocate(&twom_mod);
   so_resolve(&twom_mod, default_dynlib, sizeof(default_dynlib), 0);
