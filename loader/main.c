@@ -51,6 +51,7 @@
 #include "sha1.h"
 
 int pstv_mode = 0;
+int enable_dlcs = 0;
 
 int _newlib_heap_size_user = MEMORY_NEWLIB_MB * 1024 * 1024;
 
@@ -71,6 +72,20 @@ void *__wrap_memmove(void *dest, const void *src, size_t n) {
 
 void *__wrap_memset(void *s, int c, size_t n) {
   return sceClibMemset(s, c, n);
+}
+
+void loadConfig(void) {
+  char buffer[30];
+  int value;
+
+  FILE *config = fopen(CONFIG_FILE_PATH, "r");
+
+  if (config) {
+    while (EOF != fscanf(config, "%[^=]=%d\n", buffer, &value)) {
+      if (strcmp("has_dlcs", buffer) == 0) enable_dlcs = value;
+    }
+    fclose(config);
+  }
 }
 
 int debugPrintf(char *text, ...) {
@@ -232,11 +247,11 @@ void DeteremineSystemMemory(void) {
 }
 
 int FileSystem__IsAbsolutePath(void *this, const char *path) {
-  return strncmp(path, "ux0:", 4) == 0;
+  return (strncmp(path, "ux0:", 4) == 0) || (strncmp(path, "app0:", 5) == 0);
 }
 
 char *ShaderManager__GetShaderPath(void) {
-  return DATA_PATH "/Common/Shaders";
+  return "app0:/Common/Shaders";
 }
 
 void PresentGLContext(void) {
@@ -259,7 +274,7 @@ void patch_game(void) {
   hook_addr(so_symbol(&twom_mod, "_Z22DeteremineSystemMemoryv"), (uintptr_t)DeteremineSystemMemory);
 
   hook_addr(so_symbol(&twom_mod, "_ZN14GoogleServices10IsSignedInEv"), (uintptr_t)ret0);
-  hook_addr(so_symbol(&twom_mod, "_ZN26InAppStoreAndroidInterface24IsInAppPurchasePurchasedERK10NameString"), (uintptr_t)ret1);
+  hook_addr(so_symbol(&twom_mod, "_ZN26InAppStoreAndroidInterface24IsInAppPurchasePurchasedERK10NameString"), enable_dlcs ? (uintptr_t)ret1 : (uintptr_t)ret0);
 
   hook_addr(so_symbol(&twom_mod, "_Z12SetGLContextv"), (uintptr_t)ret0);
   hook_addr(so_symbol(&twom_mod, "_Z16PresentGLContextv"), (uintptr_t)PresentGLContext);
@@ -927,6 +942,8 @@ int main(int argc, char *argv[]) {
 
   if (!file_exists("ur0:/data/libshacccg.suprx") && !file_exists("ur0:/data/external/libshacccg.suprx"))
     fatal_error("Error libshacccg.suprx is not installed.");
+
+  loadConfig();
 
   // Check if we want to start TWoM: Stories
   int stories_mode = 0;
