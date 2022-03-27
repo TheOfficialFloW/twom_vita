@@ -65,6 +65,43 @@ vita_create_vpk(TWOM.vpk ${VITA_TITLEID} eboot.bin
        ${CMAKE_SOURCE_DIR}/livearea/frame1.png sce_sys/livearea/contents/frame1.png
        ${CMAKE_SOURCE_DIR}/livearea/frame2.png sce_sys/livearea/contents/frame2.png
        ${CMAKE_SOURCE_DIR}/livearea/template.xml sce_sys/livearea/contents/template.xml
+       ${CMAKE_SOURCE_DIR}/gamefiles/settings.cfg settings.cfg
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/blurcomposition.fsh Common/Shaders/blurcomposition.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/blurcomposition.vsh Common/Shaders/blurcomposition.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/font.fsh Common/Shaders/font.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/font.vsh Common/Shaders/font.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/gaussblur.fsh Common/Shaders/gaussblur.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/gaussblur.vsh Common/Shaders/gaussblur.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/glowsource.fsh Common/Shaders/glowsource.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/glowsource.vsh Common/Shaders/glowsource.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/graph.fsh Common/Shaders/graph.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/graph.vsh Common/Shaders/graph.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/light.fsh Common/Shaders/light.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/light.vsh Common/Shaders/light.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/meshoutlines.fsh Common/Shaders/meshoutlines.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/meshoutlines.vsh Common/Shaders/meshoutlines.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/mobileitdroundprogress.fsh Common/Shaders/mobileitdroundprogress.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/mobileitdroundprogress.vsh Common/Shaders/mobileitdroundprogress.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/mobilemeshsolid.fsh Common/Shaders/mobilemeshsolid.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/mobilemeshsolid.vsh Common/Shaders/mobilemeshsolid.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/mobilemeshtranslucent.fsh Common/Shaders/mobilemeshtranslucent.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/mobilemeshtranslucent.vsh Common/Shaders/mobilemeshtranslucent.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/mobilepostprocesskosovo.fsh Common/Shaders/mobilepostprocesskosovo.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/mobilepostprocesskosovo.vsh Common/Shaders/mobilepostprocesskosovo.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/mobilepostprocessoutlines.fsh Common/Shaders/mobilepostprocessoutlines.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/mobilepostprocessoutlines.vsh Common/Shaders/mobilepostprocessoutlines.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/particle.fsh Common/Shaders/particle.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/particle.vsh Common/Shaders/particle.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/postfseupscale.fsh Common/Shaders/postfseupscale.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/postfseupscale.vsh Common/Shaders/postfseupscale.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/sfxquad.fsh Common/Shaders/sfxquad.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/sfxquad.vsh Common/Shaders/sfxquad.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/simpleshader.fsh Common/Shaders/simpleshader.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/simpleshader.vsh Common/Shaders/simpleshader.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/ui.fsh Common/Shaders/ui.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/ui.vsh Common/Shaders/ui.vsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/video.fsh Common/Shaders/video.fsh
+       ${CMAKE_SOURCE_DIR}/gamefiles/Common/Shaders/video.vsh Common/Shaders/video.vsh
 )
 
 add_custom_target(copy
