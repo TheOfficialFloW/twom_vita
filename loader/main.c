@@ -915,7 +915,7 @@ int ctrl_thread(SceSize args, void *argp) {
       }
     }
     
-	if (!pstv_mode) {
+    if (!pstv_mode) {
       int currTouch[4] = {0, 0, 0, 0};
       sceTouchPeek(SCE_TOUCH_PORT_BACK, &touch, 1);
       for (int i = 0; i < touch.reportNum; i++) {
