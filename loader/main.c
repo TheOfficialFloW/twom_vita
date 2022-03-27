@@ -885,6 +885,7 @@ int ctrl_thread(SceSize args, void *argp) {
   Java_com_android_Game11Bits_GameLib_enableJoystick(fake_env, NULL, 1);
 
   float lastLx = 0.0f, lastLy = 0.0f, lastRx = 0.0f, lastRy = 0.0f;
+  int lastUp = 0, lastDown = 0, lastLeft = 0, lastRight = 0;
 
   int lastX[2] = { -1, -1 };
   int lastY[2] = { -1, -1 };
@@ -978,13 +979,24 @@ int ctrl_thread(SceSize args, void *argp) {
     float currLy = pad.ly >= 128-32 && pad.ly <= 128+32 ? 0.0f : ((float)pad.ly - 128.0f) / 128.0f;
     float currRx = pad.rx >= 128-32 && pad.rx <= 128+32 ? 0.0f : ((float)pad.rx - 128.0f) / 128.0f;
     float currRy = pad.ry >= 128-32 && pad.ry <= 128+32 ? 0.0f : ((float)pad.ry - 128.0f) / 128.0f;
+    int currUp = (pad.buttons & SCE_CTRL_UP) ? 1 : 0;
+    int currDown = (pad.buttons & SCE_CTRL_DOWN) ? 1 : 0;
+    int currLeft = (pad.buttons & SCE_CTRL_LEFT) ? 1 : 0;
+    int currRight = (pad.buttons & SCE_CTRL_RIGHT) ? 1 : 0;
 
-    if (currLx != lastLx || currLy != lastLy || currRx != lastRx || currRy != lastRy) {
+    if (currLx != lastLx || currLy != lastLy || currRx != lastRx || currRy != lastRy ||
+	    currUp != lastUp || currDown != lastDown || currLeft != lastLeft || currRight != lastRight) {
       lastLx = currLx;
       lastLy = currLy;
       lastRx = currRx;
       lastRy = currRy;
-      Java_com_android_Game11Bits_GameLib_joystickEvent(fake_env, NULL, currLx, currLy, currRx, currRy, 0.0f, 0.0f, 0.0f, 0.0f);
+      lastUp = currUp;
+      lastDown = currDown;
+      lastLeft = currLeft;
+      lastRight = currRight;
+      float hat_y = currUp ? -1.0f : (currDown ? 1.0f : 0.0f);
+      float hat_x = currLeft ? -1.0f : (currRight ? 1.0f : 0.0f);
+      Java_com_android_Game11Bits_GameLib_joystickEvent(fake_env, NULL, currLx, currLy, currRx, currRy, hat_x, hat_y, 0.0f, 0.0f);
     }
 
     sceKernelDelayThread(1000);
