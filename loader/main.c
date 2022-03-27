@@ -52,7 +52,6 @@
 
 int pstv_mode = 0;
 
-int sceLibcHeapSize = MEMORY_SCELIBC_MB * 1024 * 1024;
 int _newlib_heap_size_user = MEMORY_NEWLIB_MB * 1024 * 1024;
 
 unsigned int _pthread_stack_default_user = 1 * 1024 * 1024;
@@ -240,96 +239,6 @@ char *ShaderManager__GetShaderPath(void) {
   return DATA_PATH "/Common/Shaders";
 }
 
-char *interesting_files[] = {
-  // "Common/Shaders/Shaders.DefBin",
-  // "Common/Shaders/simpleshader.vsh",
-  // "Common/Shaders/simpleshader.fsh",
-  // "Common/Shaders/meshwireframe.vsh",
-  // "Common/Shaders/meshwireframe.fsh",
-  // "Common/Shaders/meshoutlines.vsh",
-  // "Common/Shaders/meshoutlines.fsh",
-  // "Common/Shaders/font.vsh",
-  // "Common/Shaders/font.fsh",
-  // "Common/Shaders/ui.vsh",
-  // "Common/Shaders/ui.fsh",
-  // "Common/Shaders/blurcomposition.vsh",
-  // "Common/Shaders/blurcomposition.fsh",
-  // "Common/Shaders/video.vsh",
-  // "Common/Shaders/video.fsh",
-  // "Common/Shaders/collisionvis.vsh",
-  // "Common/Shaders/collisionvis.fsh",
-  // "Common/Shaders/deferredcomposition.vsh",
-  // "Common/Shaders/deferredcomposition.fsh",
-  // "Common/Shaders/postfseupscale.vsh",
-  // "Common/Shaders/postfseupscale.fsh",
-  // "Common/Shaders/glowsource.vsh",
-  // "Common/Shaders/glowsource.fsh",
-  // "Common/Shaders/gaussblur.vsh",
-  // "Common/Shaders/gaussblur.fsh",
-  // "Common/Shaders/mobilepostprocessoutlines.vsh",
-  // "Common/Shaders/mobilepostprocessoutlines.fsh",
-  // "Common/Shaders/mobilepostprocesskosovo.vsh",
-  // "Common/Shaders/mobilepostprocesskosovo.fsh",
-  // "Common/Shaders/particle.vsh",
-  // "Common/Shaders/particle.fsh",
-  // "Common/Shaders/mobilemeshsolid.vsh",
-  // "Common/Shaders/mobilemeshsolid.fsh",
-  // "Common/Shaders/sfxquad.vsh",
-  // "Common/Shaders/sfxquad.fsh",
-  // "Common/Shaders/mobilemeshtranslucent.vsh",
-  // "Common/Shaders/mobilemeshtranslucent.fsh",
-  // "Common/Shaders/graph.vsh",
-  // "Common/Shaders/graph.fsh",
-  // "Common/Shaders/light.vsh",
-  // "Common/Shaders/light.fsh",
-  // "Common/Shaders/lightfinalcomponents.vsh",
-  // "Common/Shaders/lightfinalcomponents.fsh",
-  // "Common/Shaders/mobileitdroundprogress.vsh",
-  // "Common/Shaders/mobileitdroundprogress.fsh",
-};
-
-void *(* FileReader__Constructor)(void *this, char *file, char *ext, char *folder, int crc);
-void *(* FileReader__Deconstructor)(void *this);
-int (* FileReader__Read)(void *this, void *buf, int length);
-int (* FileReader__GetFileLength)(void *this);
-
-int WriteFile(char *file, void *buf, int size) {
-  SceUID fd = sceIoOpen(file, SCE_O_WRONLY | SCE_O_CREAT | SCE_O_TRUNC, 0777);
-  if (fd < 0)
-    return fd;
-
-  int written = sceIoWrite(fd, buf, size);
-
-  sceIoClose(fd);
-  return written;
-}
-
-void dump_shaders() {
-  for (int i = 0; i < sizeof(interesting_files) / sizeof(char **); i++) {
-    char *file = malloc(0x1000);
-    memset(file, 0, 0x1000);
-
-    FileReader__Constructor(file, interesting_files[i], 0, 0, 0);
-
-    int size = FileReader__GetFileLength(file);
-    // debugPrintf("%s %x\n", interesting_files[i], size);
-    char *buf = malloc(size);
-
-    FileReader__Read(file, buf, size);
-    FileReader__Deconstructor(file);
-
-    char path[128];
-    sprintf(path, DATA_PATH "/%s", interesting_files[i]);
-    WriteFile(path, buf, size);
-
-    free(buf);
-
-    free(file);
-  }
-
-  sceKernelExitProcess(0);
-}
-
 void PresentGLContext(void) {
   vglSwapBuffers(GL_FALSE);
 }
@@ -342,7 +251,6 @@ void patch_game(void) {
   FileReader__Deconstructor = (void *)so_symbol(&twom_mod, "_ZN10FileReaderD2Ev");
   FileReader__Read = (void *)so_symbol(&twom_mod, "_ZN10FileReader4ReadEPvj");
   FileReader__GetFileLength = (void *)so_symbol(&twom_mod, "_ZNK10FileReader13GetFileLengthEv");
-  // hook_addr(so_symbol(&twom_mod, "_ZN14ResourceShader15_LoadFromSourceERPcRjPK9_FILETIMEj"), (uintptr_t)&dump_shaders);
 
   hook_addr(so_symbol(&twom_mod, "_ZN10FileSystem14IsAbsolutePathEPKc"), (uintptr_t)&FileSystem__IsAbsolutePath);
   hook_addr(so_symbol(&twom_mod, "_ZN13ShaderManager13GetShaderPathEv"), (uintptr_t)&ShaderManager__GetShaderPath);
@@ -396,7 +304,6 @@ void glTexImage2DHook(GLenum target, GLint level, GLint internalformat, GLsizei 
 }
 
 void glCompressedTexImage2DHook(GLenum target, GLint level, GLenum format, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void * data) {
-  printf("compressed called\n");
   // mips for PVRTC textures break when they're under 1 block in size
   if (level == 0)
     glCompressedTexImage2D(target, level, format, width, height, border, imageSize, data);
@@ -618,11 +525,11 @@ static so_default_dynlib default_dynlib[] = {
   { "lseek", (uintptr_t)&lseek },
   { "malloc", (uintptr_t)&malloc },
   { "mbrtowc", (uintptr_t)&mbrtowc },
-  { "memchr", (uintptr_t)&memchr },
-  { "memcmp", (uintptr_t)&memcmp },
-  { "memcpy", (uintptr_t)&memcpy },
-  { "memmove", (uintptr_t)&memmove },
-  { "memset", (uintptr_t)&memset },
+  { "memchr", (uintptr_t)&sceClibMemchr },
+  { "memcmp", (uintptr_t)&sceClibMemcmp },
+  { "memcpy", (uintptr_t)&sceClibMemcpy },
+  { "memmove", (uintptr_t)&sceClibMemmove },
+  { "memset", (uintptr_t)&sceClibMemset },
   { "mkdir", (uintptr_t)&mkdir },
   { "modf", (uintptr_t)&modf },
   // { "poll", (uintptr_t)&poll },
@@ -681,20 +588,20 @@ static so_default_dynlib default_dynlib[] = {
   { "strcasecmp", (uintptr_t)&strcasecmp },
   { "strcat", (uintptr_t)&strcat },
   { "strchr", (uintptr_t)&strchr },
-  { "strcmp", (uintptr_t)&strcmp },
+  { "strcmp", (uintptr_t)&sceClibStrcmp },
   { "strcoll", (uintptr_t)&strcoll },
   { "strcpy", (uintptr_t)&strcpy },
   { "strcspn", (uintptr_t)&strcspn },
   { "strerror", (uintptr_t)&strerror },
   { "strftime", (uintptr_t)&strftime },
   { "strlen", (uintptr_t)&strlen },
-  { "strncasecmp", (uintptr_t)&strncasecmp },
-  { "strncat", (uintptr_t)&strncat },
-  { "strncmp", (uintptr_t)&strncmp },
-  { "strncpy", (uintptr_t)&strncpy },
+  { "strncasecmp", (uintptr_t)&sceClibStrncasecmp },
+  { "strncat", (uintptr_t)&sceClibStrncat },
+  { "strncmp", (uintptr_t)&sceClibStrncmp },
+  { "strncpy", (uintptr_t)&sceClibStrncpy },
   { "strpbrk", (uintptr_t)&strpbrk },
-  { "strrchr", (uintptr_t)&strrchr },
-  { "strstr", (uintptr_t)&strstr },
+  { "strrchr", (uintptr_t)&sceClibStrrchr },
+  { "strstr", (uintptr_t)&sceClibStrstr },
   { "strtod", (uintptr_t)&strtod },
   { "strtol", (uintptr_t)&strtol },
   { "strtoul", (uintptr_t)&strtoul },
