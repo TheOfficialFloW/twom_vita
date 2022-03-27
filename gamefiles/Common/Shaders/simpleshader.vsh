@@ -19,7 +19,7 @@ void main(
 
     colorVarying=DiffuseColor;
 #ifdef VERTEX_COLOR
-	colorVarying*=Color;
+    colorVarying*=Color;
 #endif
 #if defined(TEXTURE)
     uv0Varying=UV0*MappingTransform.xy+MappingTransform.zw;

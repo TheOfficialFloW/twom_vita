@@ -1,4 +1,4 @@
-#define LIGHTMAP_DECODING_MULTIPLIER		2.0f
+#define LIGHTMAP_DECODING_MULTIPLIER 2.0f
 
 uniform float4 SpecularLightingMask;
 uniform float4 EnvMapMask;

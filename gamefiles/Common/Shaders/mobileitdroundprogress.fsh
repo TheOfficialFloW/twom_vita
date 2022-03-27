@@ -7,10 +7,10 @@ float4 main(
     float4 colorVarying : TEXCOORD8,
     float2 uvCutoffAndFog : TEXCOORD1
 ) {
-	float4 color=colorVarying;
+    float4 color=colorVarying;
 
-	if(uvCutoffAndFog.x<0.0f)
-		discard;
+    if(uvCutoffAndFog.x<0.0f)
+        discard;
 
 #ifdef FOG
     float fogFactor = clamp(max(uvCutoffAndFog.y, GlobalFogColor.w), 0.f, 1.f);
@@ -23,7 +23,7 @@ float4 main(
 #endif
 
 #ifdef FINAL_TARGET_NO_SRGB
-	color.xyz = sqrt(color.xyz);
+    color.xyz = sqrt(color.xyz);
 #endif
 
     return color;

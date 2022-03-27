@@ -23,17 +23,17 @@ void main(
     float2 out Varying_ToneMap : TEXCOORD0,
     float4 out gl_Position : POSITION
 ) {
-	float4 pos = float4(VertexDenormalizationBox[0].xyz+Position.xyz*VertexDenormalizationBox[1].xyz,1.0);
+    float4 pos = float4(VertexDenormalizationBox[0].xyz+Position.xyz*VertexDenormalizationBox[1].xyz,1.0);
 
-	#ifdef SKINNING
-		float4x4 SkinningMatrix;
-		ComputeSkinningMatrix(BlendIndices, BlendWeight, SkinningMatrix);
-		pos = mul(SkinningMatrix, pos);
+#ifdef SKINNING
+    float4x4 SkinningMatrix;
+    ComputeSkinningMatrix(BlendIndices, BlendWeight, SkinningMatrix);
+    pos = mul(SkinningMatrix, pos);
 
-		Varying_ToneMap.x = 1.0f;
-	#else
-		Varying_ToneMap.x = 0.0f;
-	#endif
+    Varying_ToneMap.x = 1.0f;
+#else
+    Varying_ToneMap.x = 0.0f;
+#endif
 
-	gl_Position = mul(pos, ModelViewProjMatrix);
+    gl_Position = mul(pos, ModelViewProjMatrix);
 }
