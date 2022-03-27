@@ -957,7 +957,7 @@ int ctrl_thread(SceSize args, void *argp) {
           Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, rear_mapping[i], 0);
         }
       }
-	}
+    }
 
     SceCtrlData pad;
     sceCtrlPeekBufferPositiveExt2(0, &pad, 1);
