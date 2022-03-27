@@ -11,6 +11,7 @@
 
 #define DATA_PATH "ux0:data/twom"
 #define SO_PATH DATA_PATH "/" "libAndroidGame.so"
+#define SO_DLC_PATH DATA_PATH "/" "libAndroidGameStories.so"
 
 #define SCREEN_W 960
 #define SCREEN_H 544
