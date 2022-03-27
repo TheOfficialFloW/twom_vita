@@ -2,14 +2,14 @@
 
 <p align="center"><img src="./screenshots/game.png"></p>
 
-This is a wrapper/port of *This War of Mine* and *This War Of Mine: Stories - Father's Promise* for the *PS Vita*.
+This is a wrapper/port of <b>This War of Mine</b> and <b>This War Of Mine: Stories - Father's Promise</b> for the *PS Vita*.
 
 The port works by loading the official Android ARMv7 executables in memory, resolving their imports with native functions and patching them in order to properly run.
 
 ## Notes
 
-This port, as specified before also, can be used to run *This War Of Mine: Stories - Father's Promise* as well. Check the *Setup Instructions* paragraph to understand how to set it up.
-There also is support for all DLCs of base game (*Season Pass* and *The Little Ones*). You can find more information regarding this contents in the *DLCs Support* paragraph.
+This port, as specified before also, can be used to run <b>This War Of Mine: Stories - Father's Promise</b> as well. Check the <b>Setup Instructions</b> paragraph to understand how to set it up.
+There also is support for all DLCs of base game (<b>Season Pass</b> and <b>The Little Ones</b>). You can find more information regarding this contents in the <b>DLCs Support</b> paragraph.
 
 ## Changelog
 
@@ -40,10 +40,10 @@ In order to properly install the game, you'll have to follow these steps precise
 
 ## DLCs Support
 
-DLCs for *This War of Mine* can be enabled by editing a config file named *settings.cfg* located inside *ux0:app/TWOM00000*.
+DLCs for <b>This War of Mine</b> can be enabled by editing a config file named `settings.cfg` located inside `ux0:app/TWOM00000`.
 We strongly encourage to enable support for these contents solely if you possess these contents on your Android device.
 Sadly, we have no way to propose a license check on Vita against your purchased in-game contents on Android, so show respect and support *11 bit studios* first before proceeding.
-Open the file *ux0:app/TWOM00000/settings.cfg* and change *enable_dlcs=0* to *enable_dlcs=1*.
+Open the file `ux0:app/TWOM00000/settings.cfg` and change `enable_dlcs=0` to `enable_dlcs=1`.
 
 ## Build Instructions (For Developers)
 
