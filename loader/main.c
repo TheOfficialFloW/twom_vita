@@ -247,11 +247,6 @@ extern void *__cxa_guard_acquire;
 extern void *__cxa_guard_release;
 
 void patch_game(void) {
-  FileReader__Constructor = (void *)so_symbol(&twom_mod, "_ZN10FileReaderC2EPKcS1_S1_j");
-  FileReader__Deconstructor = (void *)so_symbol(&twom_mod, "_ZN10FileReaderD2Ev");
-  FileReader__Read = (void *)so_symbol(&twom_mod, "_ZN10FileReader4ReadEPvj");
-  FileReader__GetFileLength = (void *)so_symbol(&twom_mod, "_ZNK10FileReader13GetFileLengthEv");
-
   hook_addr(so_symbol(&twom_mod, "_ZN10FileSystem14IsAbsolutePathEPKc"), (uintptr_t)&FileSystem__IsAbsolutePath);
   hook_addr(so_symbol(&twom_mod, "_ZN13ShaderManager13GetShaderPathEv"), (uintptr_t)&ShaderManager__GetShaderPath);
 
@@ -304,6 +299,7 @@ void glTexImage2DHook(GLenum target, GLint level, GLint internalformat, GLsizei 
 }
 
 void glCompressedTexImage2DHook(GLenum target, GLint level, GLenum format, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void * data) {
+  printf("compressed called\n");
   // mips for PVRTC textures break when they're under 1 block in size
   if (level == 0)
     glCompressedTexImage2D(target, level, format, width, height, border, imageSize, data);
@@ -747,8 +743,6 @@ enum {
   AKEYCODE_BUTTON_Y = 100,
   AKEYCODE_BUTTON_L1 = 102,
   AKEYCODE_BUTTON_R1 = 103,
-  AKEYCODE_BUTTON_L2 = 104,
-  AKEYCODE_BUTTON_R2 = 105,
   AKEYCODE_BUTTON_THUMBL = 106,
   AKEYCODE_BUTTON_THUMBR = 107,
   AKEYCODE_BUTTON_START = 108,
@@ -773,9 +767,9 @@ static ButtonMapping mapping[] = {
 
 static int rear_mapping[] = {
   AKEYCODE_BUTTON_THUMBR,
-  AKEYCODE_BUTTON_R2,
+  0,
   AKEYCODE_BUTTON_THUMBL,
-  AKEYCODE_BUTTON_L2
+  0
 };
 
 int ctrl_thread(SceSize args, void *argp) {
@@ -857,7 +851,8 @@ int ctrl_thread(SceSize args, void *argp) {
       for (int i = 0; i < 4; i++) {
         if (!currTouch[i] && backTouchState[i]) {
           backTouchState[i] = 0;
-          Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, rear_mapping[i], 0);
+          if (i % 2 == 0)
+            Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, rear_mapping[i], 0);
         }
       }
     } else {
