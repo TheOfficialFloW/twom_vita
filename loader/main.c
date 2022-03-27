@@ -759,8 +759,8 @@ static ButtonMapping mapping[] = {
   { SCE_CTRL_CIRCLE,    AKEYCODE_BUTTON_B },
   { SCE_CTRL_SQUARE,    AKEYCODE_BUTTON_X },
   { SCE_CTRL_TRIANGLE,  AKEYCODE_BUTTON_Y },
-  { SCE_CTRL_L1,        AKEYCODE_BUTTON_L1 },
-  { SCE_CTRL_R1,        AKEYCODE_BUTTON_R1 },
+  { SCE_CTRL_L2,        AKEYCODE_BUTTON_L1 },
+  { SCE_CTRL_R2,        AKEYCODE_BUTTON_R1 },
   { SCE_CTRL_L3,        AKEYCODE_BUTTON_THUMBL },
   { SCE_CTRL_R3,        AKEYCODE_BUTTON_THUMBR },
   { SCE_CTRL_START,     AKEYCODE_BUTTON_START },
@@ -768,9 +768,9 @@ static ButtonMapping mapping[] = {
 
 static int rear_mapping[] = {
   AKEYCODE_BUTTON_THUMBR,
-  0,
+  AKEYCODE_BUTTON_R1,
   AKEYCODE_BUTTON_THUMBL,
-  0
+  AKEYCODE_BUTTON_L1
 };
 
 int ctrl_thread(SceSize args, void *argp) {
@@ -785,11 +785,11 @@ int ctrl_thread(SceSize args, void *argp) {
   Java_com_android_Game11Bits_GameLib_enableJoystick(fake_env, NULL, 1);
 
   float lastLx = 0.0f, lastLy = 0.0f, lastRx = 0.0f, lastRy = 0.0f;
-  int lastUp = 0, lastDown = 0, lastLeft = 0, lastRight = 0, lastL2 = 0, lastR2 = 0;
+  int lastUp = 0, lastDown = 0, lastLeft = 0, lastRight = 0, lastL = 0, lastR = 0;
 
   int lastX[2] = { -1, -1 };
   int lastY[2] = { -1, -1 };
-  int backTouchState[4] = {0, 0, 0, 0}; // R3, R2, L3, L2
+  int backTouchState[4] = {0, 0, 0, 0}; // R3, R1, L3, L1
 
   uint32_t old_buttons = 0, current_buttons = 0, pressed_buttons = 0, released_buttons = 0;
 
@@ -833,7 +833,10 @@ int ctrl_thread(SceSize args, void *argp) {
             }
             currTouch[0] = 1;
           } else {
-            backTouchState[1] = 1;
+            if (!backTouchState[1]) {
+              Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, AKEYCODE_BUTTON_R1, 1);
+              backTouchState[1] = 1;
+            }
             currTouch[1] = 1;
           }
         } else {
@@ -844,7 +847,10 @@ int ctrl_thread(SceSize args, void *argp) {
             }
             currTouch[2] = 1;
           } else {
-            backTouchState[3] = 1;
+            if (!backTouchState[3]) {
+              Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, AKEYCODE_BUTTON_L1, 1);
+              backTouchState[3] = 1;
+            }
             currTouch[3] = 1;
           }
         }
@@ -852,13 +858,9 @@ int ctrl_thread(SceSize args, void *argp) {
       for (int i = 0; i < 4; i++) {
         if (!currTouch[i] && backTouchState[i]) {
           backTouchState[i] = 0;
-          if (i % 2 == 0)
-            Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, rear_mapping[i], 0);
+          Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, rear_mapping[i], 0);
         }
       }
-    } else {
-      backTouchState[1] = (pad.buttons & SCE_CTRL_R2) ? 1 : 0;
-      backTouchState[3] = (pad.buttons & SCE_CTRL_L2) ? 1 : 0;
     }
 
     old_buttons = current_buttons;
@@ -881,10 +883,12 @@ int ctrl_thread(SceSize args, void *argp) {
     int currDown = (pad.buttons & SCE_CTRL_DOWN) ? 1 : 0;
     int currLeft = (pad.buttons & SCE_CTRL_LEFT) ? 1 : 0;
     int currRight = (pad.buttons & SCE_CTRL_RIGHT) ? 1 : 0;
+    int currL = (pad.buttons & SCE_CTRL_L1) ? 1 : 0;
+    int currR = (pad.buttons & SCE_CTRL_R1) ? 1 : 0;
 
     if (currLx != lastLx || currLy != lastLy || currRx != lastRx || currRy != lastRy ||
         currUp != lastUp || currDown != lastDown || currLeft != lastLeft || currRight != lastRight ||
-        backTouchState[1] != lastR2 || backTouchState[3] != lastL2) {
+        currR != lastR || currL != lastL) {
       lastLx = currLx;
       lastLy = currLy;
       lastRx = currRx;
@@ -893,11 +897,11 @@ int ctrl_thread(SceSize args, void *argp) {
       lastDown = currDown;
       lastLeft = currLeft;
       lastRight = currRight;
-      lastL2 = backTouchState[3];
-      lastR2 = backTouchState[1];
+      lastL = currL;
+      lastR = currR;
       float hat_y = currUp ? -1.0f : (currDown ? 1.0f : 0.0f);
       float hat_x = currLeft ? -1.0f : (currRight ? 1.0f : 0.0f);
-      Java_com_android_Game11Bits_GameLib_joystickEvent(fake_env, NULL, currLx, currLy, currRx, currRy, hat_x, hat_y, (float)lastL2, (float)lastR2);
+      Java_com_android_Game11Bits_GameLib_joystickEvent(fake_env, NULL, currLx, currLy, currRx, currRy, hat_x, hat_y, (float)lastL, (float)lastR);
     }
 
     sceKernelDelayThread(1000);
