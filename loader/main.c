@@ -259,6 +259,8 @@ void patch_game(void) {
   hook_addr(so_symbol(&twom_mod, "_Z22DeteremineSystemMemoryv"), (uintptr_t)DeteremineSystemMemory);
 
   hook_addr(so_symbol(&twom_mod, "_ZN14GoogleServices10IsSignedInEv"), (uintptr_t)ret0);
+  hook_addr(so_symbol(&twom_mod, "_ZN26InAppStoreAndroidInterface24IsInAppPurchasePurchasedERK10NameString"), (uintptr_t)ret1);
+
   hook_addr(so_symbol(&twom_mod, "_Z12SetGLContextv"), (uintptr_t)ret0);
   hook_addr(so_symbol(&twom_mod, "_Z16PresentGLContextv"), (uintptr_t)PresentGLContext);
 
@@ -299,7 +301,6 @@ void glTexImage2DHook(GLenum target, GLint level, GLint internalformat, GLsizei 
 }
 
 void glCompressedTexImage2DHook(GLenum target, GLint level, GLenum format, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void * data) {
-  printf("compressed called\n");
   // mips for PVRTC textures break when they're under 1 block in size
   if (level == 0)
     glCompressedTexImage2D(target, level, format, width, height, border, imageSize, data);
