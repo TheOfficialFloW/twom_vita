@@ -82,7 +82,7 @@ void loadConfig(void) {
 
   if (config) {
     while (EOF != fscanf(config, "%[^=]=%d\n", buffer, &value)) {
-      if (strcmp("has_dlcs", buffer) == 0) enable_dlcs = value;
+      if (strcmp("enable_dlcs", buffer) == 0) enable_dlcs = value;
     }
     fclose(config);
   }
