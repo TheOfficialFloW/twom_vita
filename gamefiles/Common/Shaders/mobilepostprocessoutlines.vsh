@@ -8,6 +8,6 @@ void main(
 ) {
     gl_Position = float4(Position,0.f,1.f);
 
-    float2 uv0=Position*float2(0.5f,0.5f)+float2(0.5f,0.5f);
+    float2 uv0=Position*0.5f+0.5f;
     uv0Varying=uv0.xyxy+OutlineUVOffset*float4(1.f,1.f,-1.f,-1.f);
 }
