@@ -50,6 +50,8 @@
 #include "so_util.h"
 #include "sha1.h"
 
+int pstv_mode = 0;
+
 int sceLibcHeapSize = MEMORY_SCELIBC_MB * 1024 * 1024;
 int _newlib_heap_size_user = MEMORY_NEWLIB_MB * 1024 * 1024;
 
@@ -57,8 +59,6 @@ unsigned int _pthread_stack_default_user = 1 * 1024 * 1024;
 
 unsigned int _oal_thread_priority = 64;
 unsigned int _oal_thread_affinity = 0x40000;
-
-SceTouchPanelInfo panelInfoFront, panelInfoBack;
 
 so_module twom_mod;
 
@@ -840,6 +840,8 @@ enum {
   AKEYCODE_BUTTON_Y = 100,
   AKEYCODE_BUTTON_L1 = 102,
   AKEYCODE_BUTTON_R1 = 103,
+  AKEYCODE_BUTTON_L2 = 104,
+  AKEYCODE_BUTTON_R2 = 105,
   AKEYCODE_BUTTON_THUMBL = 106,
   AKEYCODE_BUTTON_THUMBR = 107,
   AKEYCODE_BUTTON_START = 108,
@@ -857,9 +859,18 @@ static ButtonMapping mapping[] = {
   { SCE_CTRL_TRIANGLE,  AKEYCODE_BUTTON_Y },
   { SCE_CTRL_L1,        AKEYCODE_BUTTON_L1 },
   { SCE_CTRL_R1,        AKEYCODE_BUTTON_R1 },
-  // { SCE_CTRL_LEFT,      AKEYCODE_BUTTON_THUMBL },
-  // { SCE_CTRL_RIGHT,     AKEYCODE_BUTTON_THUMBR },
+  { SCE_CTRL_L2,        AKEYCODE_BUTTON_L2 },
+  { SCE_CTRL_R3,        AKEYCODE_BUTTON_R2 },
+  { SCE_CTRL_L3,        AKEYCODE_BUTTON_THUMBL },
+  { SCE_CTRL_R3,        AKEYCODE_BUTTON_THUMBR },
   { SCE_CTRL_START,     AKEYCODE_BUTTON_START },
+};
+
+static int rear_mapping[] = {
+  AKEYCODE_BUTTON_THUMBR,
+  AKEYCODE_BUTTON_R2,
+  AKEYCODE_BUTTON_THUMBL,
+  AKEYCODE_BUTTON_L2
 };
 
 int ctrl_thread(SceSize args, void *argp) {
@@ -877,6 +888,7 @@ int ctrl_thread(SceSize args, void *argp) {
 
   int lastX[2] = { -1, -1 };
   int lastY[2] = { -1, -1 };
+  int backTouchState[4] = {0, 0, 0, 0};
 
   uint32_t old_buttons = 0, current_buttons = 0, pressed_buttons = 0, released_buttons = 0;
 
@@ -900,6 +912,50 @@ int ctrl_thread(SceSize args, void *argp) {
           Java_com_android_Game11Bits_GameLib_touchUp(fake_env, NULL, i, lastX[i], lastY[i]);
         lastX[i] = -1;
         lastY[i] = -1;
+      }
+    }
+    
+    if (!pstv_mode) {
+      int currTouch[4] = {0, 0, 0, 0};
+      sceTouchPeek(SCE_TOUCH_PORT_BACK, &touch, 1);
+      for (int i = 0; i < touch.reportNum; i++) {
+        int x = touch.report[i].x;
+        int y = touch.report[i].y;
+        if (x > 960) {
+          if (y > 544) {
+            if (!backTouchState[0]) {
+              Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, AKEYCODE_BUTTON_THUMBR, 1);
+              backTouchState[0] = 1;
+            }
+            currTouch[0] = 1;
+          } else {
+            if (!backTouchState[1]) {
+              Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, AKEYCODE_BUTTON_R2, 1);
+              backTouchState[1] = 1;
+            }
+            currTouch[1] = 1;
+          }
+        } else {
+          if (y > 544) {
+            if (!backTouchState[2]) {
+              Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, AKEYCODE_BUTTON_THUMBL, 1);
+              backTouchState[2] = 1;
+            }
+            currTouch[2] = 1;
+          } else {
+            if (!backTouchState[3]) {
+              Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, AKEYCODE_BUTTON_L2, 1);
+              backTouchState[3] = 1;
+            }
+            currTouch[3] = 1;
+          }
+        }
+      }
+      for (int i = 0; i < 4; i++) {
+        if (!currTouch[i] && backTouchState[i]) {
+          backTouchState[i] = 0;
+          Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, rear_mapping[i], 0);
+        }
       }
     }
 
@@ -941,13 +997,13 @@ int main(int argc, char *argv[]) {
   sceCtrlSetSamplingModeExt(SCE_CTRL_MODE_ANALOG_WIDE);
   sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
   sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK, SCE_TOUCH_SAMPLING_STATE_START);
-  sceTouchGetPanelInfo(SCE_TOUCH_PORT_FRONT, &panelInfoFront);
-  sceTouchGetPanelInfo(SCE_TOUCH_PORT_BACK, &panelInfoBack);
 
   scePowerSetArmClockFrequency(444);
   scePowerSetBusClockFrequency(222);
   scePowerSetGpuClockFrequency(222);
   scePowerSetGpuXbarClockFrequency(166);
+  
+  pstv_mode = sceKernelGetModel() == 0x20000 ? 1 : 0;
 
   if (check_kubridge() < 0)
     fatal_error("Error kubridge.skprx is not installed.");
