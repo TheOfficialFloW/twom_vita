@@ -247,11 +247,11 @@ extern void *__cxa_guard_acquire;
 extern void *__cxa_guard_release;
 
 void patch_game(void) {
-  hook_addr(so_symbol(&twom_mod, "_ZN10FileSystem14IsAbsolutePathEPKc"), (uintptr_t)&FileSystem__IsAbsolutePath);
-  hook_addr(so_symbol(&twom_mod, "_ZN13ShaderManager13GetShaderPathEv"), (uintptr_t)&ShaderManager__GetShaderPath);
-
   hook_addr(so_symbol(&twom_mod, "__cxa_guard_acquire"), (uintptr_t)&__cxa_guard_acquire);
   hook_addr(so_symbol(&twom_mod, "__cxa_guard_release"), (uintptr_t)&__cxa_guard_release);
+
+  hook_addr(so_symbol(&twom_mod, "_ZN10FileSystem14IsAbsolutePathEPKc"), (uintptr_t)&FileSystem__IsAbsolutePath);
+  hook_addr(so_symbol(&twom_mod, "_ZN13ShaderManager13GetShaderPathEv"), (uintptr_t)&ShaderManager__GetShaderPath);
 
   hook_addr(so_symbol(&twom_mod, "_Z17GetApkAssetOffsetPKcRj"), (uintptr_t)ret0);
 
@@ -398,7 +398,7 @@ static so_default_dynlib default_dynlib[] = {
   // { "eglDestroySurface", (uintptr_t)&eglDestroySurface },
   // { "eglGetConfigAttrib", (uintptr_t)&eglGetConfigAttrib },
   { "eglGetDisplay", (uintptr_t)&ret0 },
-  // { "eglGetProcAddress", (uintptr_t)&eglGetProcAddress },
+  { "eglGetProcAddress", (uintptr_t)&eglGetProcAddress },
   // { "eglInitialize", (uintptr_t)&eglInitialize },
   // { "eglMakeCurrent", (uintptr_t)&eglMakeCurrent },
   { "eglQueryString", (uintptr_t)&ret0 },
@@ -818,7 +818,7 @@ int ctrl_thread(SceSize args, void *argp) {
 
     SceCtrlData pad;
     sceCtrlPeekBufferPositiveExt2(0, &pad, 1);
-    
+
     if (!pstv_mode) {
       int currTouch[4] = {0, 0, 0, 0};
       sceTouchPeek(SCE_TOUCH_PORT_BACK, &touch, 1);
@@ -915,7 +915,7 @@ int main(int argc, char *argv[]) {
   scePowerSetBusClockFrequency(222);
   scePowerSetGpuClockFrequency(222);
   scePowerSetGpuXbarClockFrequency(166);
-  
+
   pstv_mode = sceKernelGetModel() == 0x20000 ? 1 : 0;
 
   if (check_kubridge() < 0)
