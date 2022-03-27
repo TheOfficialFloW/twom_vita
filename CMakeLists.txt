@@ -60,6 +60,11 @@ vita_create_self(eboot.bin TWOM UNSAFE)
 vita_create_vpk(TWOM.vpk ${VITA_TITLEID} eboot.bin
   VERSION ${VITA_VERSION}
   NAME ${VITA_APP_NAME}
+  FILE ${CMAKE_SOURCE_DIR}/livearea/icon0.png sce_sys/icon0.png
+       ${CMAKE_SOURCE_DIR}/livearea/bg.png sce_sys/livearea/contents/bg.png
+       ${CMAKE_SOURCE_DIR}/livearea/frame1.png sce_sys/livearea/contents/frame1.png
+       ${CMAKE_SOURCE_DIR}/livearea/frame2.png sce_sys/livearea/contents/frame2.png
+       ${CMAKE_SOURCE_DIR}/livearea/template.xml sce_sys/livearea/contents/template.xml
 )
 
 add_custom_target(copy
