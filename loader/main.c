@@ -859,8 +859,6 @@ static ButtonMapping mapping[] = {
   { SCE_CTRL_TRIANGLE,  AKEYCODE_BUTTON_Y },
   { SCE_CTRL_L1,        AKEYCODE_BUTTON_L1 },
   { SCE_CTRL_R1,        AKEYCODE_BUTTON_R1 },
-  { SCE_CTRL_L2,        AKEYCODE_BUTTON_L2 },
-  { SCE_CTRL_R3,        AKEYCODE_BUTTON_R2 },
   { SCE_CTRL_L3,        AKEYCODE_BUTTON_THUMBL },
   { SCE_CTRL_R3,        AKEYCODE_BUTTON_THUMBR },
   { SCE_CTRL_START,     AKEYCODE_BUTTON_START },
@@ -885,11 +883,11 @@ int ctrl_thread(SceSize args, void *argp) {
   Java_com_android_Game11Bits_GameLib_enableJoystick(fake_env, NULL, 1);
 
   float lastLx = 0.0f, lastLy = 0.0f, lastRx = 0.0f, lastRy = 0.0f;
-  int lastUp = 0, lastDown = 0, lastLeft = 0, lastRight = 0;
+  int lastUp = 0, lastDown = 0, lastLeft = 0, lastRight = 0, lastL2 = 0, lastR2 = 0;
 
   int lastX[2] = { -1, -1 };
   int lastY[2] = { -1, -1 };
-  int backTouchState[4] = {0, 0, 0, 0};
+  int backTouchState[4] = {0, 0, 0, 0}; // R3, R2, L3, L2
 
   uint32_t old_buttons = 0, current_buttons = 0, pressed_buttons = 0, released_buttons = 0;
 
@@ -915,6 +913,9 @@ int ctrl_thread(SceSize args, void *argp) {
         lastY[i] = -1;
       }
     }
+
+    SceCtrlData pad;
+    sceCtrlPeekBufferPositiveExt2(0, &pad, 1);
     
     if (!pstv_mode) {
       int currTouch[4] = {0, 0, 0, 0};
@@ -930,10 +931,7 @@ int ctrl_thread(SceSize args, void *argp) {
             }
             currTouch[0] = 1;
           } else {
-            if (!backTouchState[1]) {
-              Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, AKEYCODE_BUTTON_R2, 1);
-              backTouchState[1] = 1;
-            }
+            backTouchState[1] = 1;
             currTouch[1] = 1;
           }
         } else {
@@ -944,10 +942,7 @@ int ctrl_thread(SceSize args, void *argp) {
             }
             currTouch[2] = 1;
           } else {
-            if (!backTouchState[3]) {
-              Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, AKEYCODE_BUTTON_L2, 1);
-              backTouchState[3] = 1;
-            }
+            backTouchState[3] = 1;
             currTouch[3] = 1;
           }
         }
@@ -958,10 +953,10 @@ int ctrl_thread(SceSize args, void *argp) {
           Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, rear_mapping[i], 0);
         }
       }
+    } else {
+      backTouchState[1] = (pad.buttons & SCE_CTRL_R2) ? 1 : 0;
+      backTouchState[3] = (pad.buttons & SCE_CTRL_L2) ? 1 : 0;
     }
-
-    SceCtrlData pad;
-    sceCtrlPeekBufferPositiveExt2(0, &pad, 1);
 
     old_buttons = current_buttons;
     current_buttons = pad.buttons;
@@ -985,7 +980,8 @@ int ctrl_thread(SceSize args, void *argp) {
     int currRight = (pad.buttons & SCE_CTRL_RIGHT) ? 1 : 0;
 
     if (currLx != lastLx || currLy != lastLy || currRx != lastRx || currRy != lastRy ||
-	    currUp != lastUp || currDown != lastDown || currLeft != lastLeft || currRight != lastRight) {
+        currUp != lastUp || currDown != lastDown || currLeft != lastLeft || currRight != lastRight ||
+        backTouchState[1] != lastR2 || backTouchState[3] != lastL2) {
       lastLx = currLx;
       lastLy = currLy;
       lastRx = currRx;
@@ -994,9 +990,11 @@ int ctrl_thread(SceSize args, void *argp) {
       lastDown = currDown;
       lastLeft = currLeft;
       lastRight = currRight;
+      lastL2 = backTouchState[3];
+      lastR2 = backTouchState[1];
       float hat_y = currUp ? -1.0f : (currDown ? 1.0f : 0.0f);
       float hat_x = currLeft ? -1.0f : (currRight ? 1.0f : 0.0f);
-      Java_com_android_Game11Bits_GameLib_joystickEvent(fake_env, NULL, currLx, currLy, currRx, currRy, hat_x, hat_y, 0.0f, 0.0f);
+      Java_com_android_Game11Bits_GameLib_joystickEvent(fake_env, NULL, currLx, currLy, currRx, currRy, hat_x, hat_y, (float)lastL2, (float)lastR2);
     }
 
     sceKernelDelayThread(1000);
