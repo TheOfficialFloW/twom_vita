@@ -17,18 +17,18 @@ void main(
 ) {
     float4 pos4 = float4(Position,1.0f);
     float3 posWS = (mul(pos4, ModelMatrix)).xyz;
-    
+
     gl_Position=mul(float4(posWS,1.0f), ViewProjMatrix);
     uv0Varying = UV0 * MappingTransform.xy + MappingTransform.zw;
-    
+
     float4 color = DiffuseColor;
-    
+
 #ifdef FOG
     float fog = posWS.y * GlobalFogParams.x + GlobalFogParams.y;
 #else
     float fog = 0.0f;
 #endif
-    
+
     uvCutoffAndFog = float2(color.w - uv0Varying.y, fog);
     colorVarying = float4(color.xyz,1.0f);
 }

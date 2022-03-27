@@ -11,18 +11,18 @@ float4 main(
 ) {
 #ifdef DIFFUSE_TEXTURE
     float4 albedo = float4(tex2D(Texture0, Varying_UV));
-    
+
     #ifdef ALPHA_TEST
         if (albedo.w * ComboDesaturationAlphaTest.y + ComboDesaturationAlphaTest.z < 0.0f)
             discard;
     #endif
-    
+
 #else
     float4 albedo = float4(1.0f,1.0f,1.0f,1.0f);
 #endif
-    
+
     albedo *= Varying_Color;
-    
+
 #ifdef FOG
     float fogFactor = clamp(max(Varying_Fog.x, GlobalFogColor.w), 0.0f, 1.0f);
 #ifdef BLEND_ALPHA
@@ -31,6 +31,6 @@ float4 main(
     albedo*=fogFactor;
 #endif
 #endif
-    
+
     return albedo;
 }

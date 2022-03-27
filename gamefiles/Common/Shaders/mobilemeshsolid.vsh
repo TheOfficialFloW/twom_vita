@@ -67,26 +67,26 @@ void main(
     float4 out gl_Position : POSITION
 ) {
     // Varying_ToneMap = 1.0;
-    
+
     //----------------------------------------------
-    
+
     float4 pos = float4(Position, 1);
     float4 nor = float4(Normal, 0);
 
 #ifdef SKINNING
     float4 va, vb, vc;
     ComputeSkinningMatrix(BlendIndices, BlendWeight, va, vb, vc);
-    
+
     pos     = float4(dot(pos, va), dot(pos, vb), dot(pos, vc), 1);
     nor     = float4(dot(nor, va), dot(nor, vb), dot(nor, vc), 1);
 #endif
 
     nor.w=1.0;
-    
+
     gl_Position = mul(mul(pos, ModelMatrix), ViewProjMatrix);
-    
+
     // Varying_Normal = mul(nor, InvTModelMatrix);
-    
+
     Varying_UV = UV0 * MappingTransform.xy + MappingTransform.zw;
     //Varying_Color = Color.xyz*DiffuseColor.xyz;
 
@@ -94,16 +94,16 @@ void main(
 #if defined(VERTEX_COLOR)
     Varying_Color *= Color.xyz;
 #endif
-    
+
     // fog
-    
+
     float4 posWS4 = mul(pos, ModelMatrix);
     float3 posWS = posWS4.xyz;
-    
+
     Varying_Fog.x = posWS.y * GlobalFogParams.x + GlobalFogParams.y;
-    
+
     // sun
-    
+
     float4 worldSpaceNormal = mul(nor, InvTModelMatrix);
 
 
@@ -115,17 +115,17 @@ void main(
     float3 probeX = (worldSpaceNormal.x >= 0.0) ? LightProbe[1].xyz : LightProbe[0].xyz ;
     float3 probeY = (worldSpaceNormal.y >= 0.0) ? LightProbe[3].xyz : LightProbe[2].xyz ;
     float3 probeZ = (worldSpaceNormal.z >= 0.0) ? LightProbe[5].xyz : LightProbe[4].xyz ;
-    
+
     float3 probeCenterWS = LightProbeGradient[0].xyz;
     float3 gradX = LightProbeGradient[1].xyz;
     float3 gradY = LightProbeGradient[2].xyz;
     float3 gradZ = LightProbeGradient[3].xyz;
     float3 probeOffsetWS = posWS - probeCenterWS;
-    
+
     probeX += probeOffsetWS.xxx * gradX;
     probeY += probeOffsetWS.yyy * gradY;
     probeZ += probeOffsetWS.zzz * gradZ;
-    
+
     float3 sqNrmWS = worldSpaceNormal.xyz * worldSpaceNormal.xyz;
     Varying_Diffuse = sqNrmWS.x * probeX + sqNrmWS.y * probeY + sqNrmWS.z * probeZ;
 #else
@@ -133,17 +133,17 @@ void main(
     float3 diff = (VSHSunFrontColor.xyz * normalFactor) * 2.0;
     Varying_Color.xyz *= diff;
 #endif
-    
+
     float3 worldSpaceView = posWS - WorldSpaceEyePosition.xyz;
-    
+
 #if defined(ENV_MAP)
     Varying_EnvMapVector.xyz = reflect(worldSpaceView.xyz,worldSpaceNormal.xyz);
 #endif
-    
+
     //todo: global depth buffer generation
-    
+
     //todo: specular
-    
+
 #ifdef KOSOVO_SOFTNESS_DEPTH_IN_ALPHA
     Varying_SoftnessDepth.x = EncodeKosovoFakeDepth(posWS.y);
 #endif

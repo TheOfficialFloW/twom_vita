@@ -7,7 +7,7 @@ float4 main(
 ) {
     float4 color=colorVarying;
     float4 txt=tex2D(Texture0,uv0Varying.xy);
-    
+
 #ifdef OUTLINES
     float4 outlineColor 	= OutlineColor;
     color 	= lerp( outlineColor, color, txt.x );

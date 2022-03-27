@@ -8,10 +8,9 @@ float4 main(
     color+=tex2D(Texture0,uv0Varying.zw);
     color+=tex2D(Texture0,uv1Varying.xy);
     color+=tex2D(Texture0,uv1Varying.zw);
-	
+
     color*=0.25f;
     color.w = 0.0f;
 
     return color;
 }
-

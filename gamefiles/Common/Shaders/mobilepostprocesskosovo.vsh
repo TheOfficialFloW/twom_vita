@@ -18,7 +18,7 @@ void main(
 ) {
     float4 pos4 = float4(Position, 1.0f);
     UV0.y = 1.0f - UV0.y;
-    
+
     Varying_MainUV = UV0 * UVOffset.xy + UVOffset.zw;
     Varying_GlowUV = UV0 * GlowUVOffset.xy + GlowUVOffset.zw;
     Varying_MaskUV0 = float2(dot(pos4,CustomVSHParams[2]),dot(pos4,CustomVSHParams[3]));

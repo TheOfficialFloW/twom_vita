@@ -5,7 +5,7 @@ float4 main(
     float4 colorVarying : TEXCOORD8
 ) {
     float4 color=colorVarying;
-    
+
 #ifndef NO_TEXTURE
     float4 txt=tex2D(Texture0,uv0Varying.xy);
 #ifdef ALPHA_ONLY_TEXTURE

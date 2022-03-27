@@ -16,7 +16,7 @@ void main(
 
 #ifdef CATMULL_ROM
 	float3 pos, way;
-	
+
 	// ewaluacja catmull roma zostala zinlinowana z powodu bledow na androidzie
 
 	float4 a=UserVSHParams[int(4.0*v.z)];
@@ -40,7 +40,7 @@ void main(
 	}
 	{
 		float3 t	 = float3(st,st,st);
-		float3 t2  = float3(st2,st2,st2);	
+		float3 t2  = float3(st2,st2,st2);
 		float3 c05 = float3(0.5,0.5,0.5);
 		float3 c1  = float3(1.,1.,1.);
 		float3 c2  = float3(2.,2.,2.);
@@ -49,7 +49,7 @@ void main(
 		float3 c5  = float3(5.,5.,5.);
 		way=((c.xyz-a.xyz) + c2*(a.xyz*c2-b.xyz*c5+c.xyz*c4-d.xyz) * t + c3*(a.xyz*-c1+b.xyz*c3-c.xyz*c3+d.xyz)*t2)*c05;
 	}
-	
+
 	width*=v.y;
 	positionOnPath=lerp(a.w,d.w,v.x);
 #elif defined(ARROW)
@@ -59,7 +59,7 @@ void main(
 	float3 way=b.xyz;
 	width*=4.0*v.y;
 	positionOnPath=1.0;
-#else	
+#else
 	float4 a=UserVSHParams[int(2.0*v.z)];
 	float4 b=UserVSHParams[int(2.0*v.z+1.0)];
 	float4 pos4=lerp(a,b,v.x);

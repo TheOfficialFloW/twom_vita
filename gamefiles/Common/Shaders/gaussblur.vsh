@@ -15,7 +15,7 @@ void main(
     gl_Position = float4(Position,1.0f);
 
     float2 uv = Position.xy * PosToUV.xy + PosToUV.zw;
-    
+
     Varying_blurUV0.xy = uv + BlurUVGenParams[0].x * KernelSize.xy;
     Varying_blurUV0.zw = uv + BlurUVGenParams[0].y * KernelSize.xy;
     Varying_blurUV1.xy = uv + BlurUVGenParams[0].z * KernelSize.xy;

@@ -31,7 +31,7 @@ float4 main(
 //#endif
 ) {
     float4 albedo = float4(Varying_Color, 1.0f);
-    
+
 #ifdef DIFFUSE_TEXTURE
     albedo *= float4(tex2D(Texture0, Varying_UV));
 #endif
@@ -45,41 +45,41 @@ float4 main(
     float4 maskVector = albedo;
     float envMapMask = clamp(dot(maskVector, EnvMapMask) + MaskOffsetParams.z,0.0f,1.0f);
     float specularMask = clamp(dot(maskVector, SpecularLightingMask) + MaskOffsetParams.z,0.0f,1.0f);
-    
+
     float3 specular = float3(0.0f,0.0f,0.0f);
     //specular = (half3)in.specular * specularMask;
-    
+
 #ifdef ENV_MAP
     float4 envMap = float4(texCUBE(Texture3, Varying_EnvMapVector.xyz));
     envMap.xyz = EnvMapColor.xyz;
-    
+
     float3 emissive = float3(0.0f,0.0f,0.0f);
     float envMapLightingMaskUsage = 0.0f;
-    
+
 #if defined(ENV_MAP_ADDITIVE)
 #if defined(ENV_MAP_LIGHTING_MASK)
     envMapLightingMaskUsage = 1.0f;
 #endif
     emissive = envMap.xyz * envMap.w * envMapMask;
 #endif
-    
+
     specular += emissive;
 #endif
-    
+
     //lighting
-    
+
 #if defined(LIGHTMAP) || defined(TERRAIN_LIGHTMAP)
     float3 diffuse = float4(tex2D(Texture7, Varying_LightmapUV)).xyz;
     diffuse *= LIGHTMAP_DECODING_MULTIPLIER;
-    
+
     albedo.xyz = albedo.xyz * diffuse.xyz + specular * diffuse.xyz;
 #elif defined(LIGHT_PROBES)
     float3 diffuse = Varying_Diffuse;
-    
+
     albedo.xyz = albedo.xyz * diffuse.xyz + specular * diffuse.xyz;
-    
+
 #endif
-    
+
     float fogFactor = clamp(max(Varying_Fog.x, GlobalFogColor.w), 0.0, 1.0);
     albedo.xyz = lerp(GlobalFogColor.xyz, albedo.xyz, fogFactor);
 

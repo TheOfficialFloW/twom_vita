@@ -14,7 +14,7 @@ float4 main(
     float4 txt2=tex2D(Texture0,uv0Varying.zw);
     txt=lerp(txt,txt2,AnimationFrameFactor.x);
 #endif
-    
+
 #ifdef ALPHA_TEST
     if(txt.w*AlphaTest.x+AlphaTest.y<0.0f)
         discard;

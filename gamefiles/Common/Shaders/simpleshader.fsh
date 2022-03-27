@@ -9,7 +9,7 @@ float4 main(
     float4 colorVarying : TEXCOORD8
 ) {
 	float4 color = colorVarying;
-	
+
 #ifdef TEXTURE
 	float4 txt = tex2D(Texture0, uv0Varying);
 

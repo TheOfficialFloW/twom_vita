@@ -28,11 +28,11 @@ void main(
 		float4 va, vb, vc;
 		ComputeSkinningMatrix(BlendIndices, BlendWeight, va, vb, vc);
 		pos = float4(dot(pos, va), dot(pos, vb), dot(pos, vc), 1.0);
-		
+
 		Varying_ToneMap.x = 1.0f;
 	#else
 		Varying_ToneMap.x = 0.0f;
 	#endif
 
-	gl_Position = mul(pos, ModelViewProjMatrix);    
+	gl_Position = mul(pos, ModelViewProjMatrix);
 }

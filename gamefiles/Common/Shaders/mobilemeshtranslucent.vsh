@@ -40,43 +40,43 @@ void main(
     float4 out gl_Position : POSITION
 ) {
     // Varying_ToneMap = 1.0;
-    
+
     float4 pos = float4(Position, 1.0);
     float4 nor = float4(Normal, 0.0);
-    
+
 #ifdef SKINNING
     float4 va, vb, vc;
     ComputeSkinningMatrix(BlendIndices, BlendWeight, va, vb, vc);
-    
+
     pos     = float4(dot(pos, va), dot(pos, vb), dot(pos, vc), 1.0);
     nor     = float4(dot(nor, va), dot(nor, vb), dot(nor, vc), 1.0);
-    
+
     // Varying_ToneMap = 2.0;
 #endif
-    
+
     nor.w = 1.0;
 
     float4 posWS4 = mul(pos, ModelMatrix);
     float3 posWS = posWS4.xyz;
-    
+
     gl_Position = mul(posWS4, ViewProjMatrix);
-    
+
     // Varying_Normal = mul(nor, InvTModelMatrix);
-    
+
     Varying_UV = UV0 * MappingTransform.xy + MappingTransform.zw;
-    
+
     Varying_Color = DiffuseColor;
 #if defined(VERTEX_COLOR)
     Varying_Color *= Color;
 #endif
-    
+
 #ifdef LIGHTING
-    float4 worldSpaceNormal = mul(nor, InvTModelMatrix);    
+    float4 worldSpaceNormal = mul(nor, InvTModelMatrix);
     float normalFactor = dot(normalize(worldSpaceNormal.xyz),VSHInvSunDiffuseDirection.xyz);
     float3 diff = (VSHSunFrontColor.xyz * normalFactor) * 2.0;
     Varying_Color.xyz *= diff;
 #endif
-    
+
 #ifdef FOG
     Varying_Fog.x = posWS.y * GlobalFogParams.x + GlobalFogParams.y;
 #else
