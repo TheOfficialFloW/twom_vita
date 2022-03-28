@@ -324,6 +324,23 @@ int GetCurrentThreadId(void) {
 extern void *__cxa_guard_acquire;
 extern void *__cxa_guard_release;
 
+uint32_t rumble_tick;
+void VibrateController(void *this, float a2, float a3, uint32_t a4) {
+  SceCtrlActuator handle;
+  handle.small = 100;
+  handle.large = 100;
+  sceCtrlSetActuator(1, &handle);
+  rumble_tick = sceKernelGetProcessTimeWide();
+}
+
+void StopRumble (void) {
+  SceCtrlActuator handle;
+  handle.small = 0;
+  handle.large = 0;
+  sceCtrlSetActuator(1, &handle);
+  rumble_tick = 0;
+}
+
 void patch_game(void) {
   hook_addr(so_symbol(&twom_mod, "__cxa_guard_acquire"), (uintptr_t)&__cxa_guard_acquire);
   hook_addr(so_symbol(&twom_mod, "__cxa_guard_release"), (uintptr_t)&__cxa_guard_release);
@@ -354,6 +371,9 @@ void patch_game(void) {
   hook_addr(so_symbol(&twom_mod, "_ZN10BaseThread4InitEv"), (uintptr_t)BaseThread__Init);
   hook_addr(so_symbol(&twom_mod, "_ZN10BaseThread11SetPriorityEi"), (uintptr_t)ret0);
   hook_addr(so_symbol(&twom_mod, "_Z18GetCurrentThreadIdv"), (uintptr_t)GetCurrentThreadId);
+  
+  if (pstv_mode)
+    hook_addr(so_symbol(&twom_mod, "_ZNK9GameInput18VibrateXControllerEffj"), (uintptr_t)VibrateController);
 }
 
 extern void *__aeabi_atexit;
@@ -948,6 +968,9 @@ int ctrl_thread(SceSize args, void *argp) {
           Java_com_android_Game11Bits_GameLib_keyEvent(fake_env, NULL, rear_mapping[i], 0);
         }
       }
+    } else {
+      if (rumble_tick != 0 && sceKernelGetProcessTimeWide() - rumble_tick > 500000) // 0.5 sec
+        StopRumble();
     }
 
     old_buttons = current_buttons;
