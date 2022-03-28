@@ -321,12 +321,6 @@ int GetCurrentThreadId(void) {
   return sceKernelGetThreadId();
 }
 
-void (* AndroidGameThread___OnProcessMessage)(void *this, int *msg);
-void AndroidGameThread___OnProcessMessage_Hook(void *this, int *msg) {
-  // printf("%d\n", *msg);
-  AndroidGameThread___OnProcessMessage(this, msg);
-}
-
 extern void *__cxa_guard_acquire;
 extern void *__cxa_guard_release;
 
