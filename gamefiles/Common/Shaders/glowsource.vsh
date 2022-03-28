@@ -9,9 +9,7 @@ void main(
     float4 out uv1Varying : TEXCOORD1,
     float4 out gl_Position : POSITION
 ) {
-    float3 pos=Position;
-
-    gl_Position = float4(pos,1);
+    gl_Position = float4(Position,1.0f);
 
     float2 uv = float2(UV0.x, 1.0f - UV0.y);
     uv = uv * UVOffsets.xy + UVOffsets.zw;

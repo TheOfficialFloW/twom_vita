@@ -80,7 +80,7 @@ float4 main(
 
 #endif
 
-    float fogFactor = clamp(max(Varying_Fog.x, GlobalFogColor.w), 0.0, 1.0);
+    float fogFactor = clamp(max(Varying_Fog.x, GlobalFogColor.w), 0.0f, 1.0f);
     albedo.xyz = lerp(GlobalFogColor.xyz, albedo.xyz, fogFactor);
 
 #ifdef KOSOVO_SOFTNESS_DEPTH_IN_ALPHA

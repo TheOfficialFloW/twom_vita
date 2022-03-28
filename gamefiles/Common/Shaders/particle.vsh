@@ -12,16 +12,16 @@ void main(
     float2 out frameFactorFog : TEXCOORD1,
     float4 out gl_Position : POSITION
 ) {
-    float4 pos = float4(Position.xyz, 1.0);
+    float4 pos = float4(Position.xyz, 1.0f);
     gl_Position = mul(pos, ModelViewProjMatrix);
 
-    int node = int(Color.x * 255.0);
+    int node = int(Color.x * 255.0f);
     float factor = Color.y;
 
     colorVarying=lerp(NodeColors[node],NodeColors[node+1],factor);
     uv0Varying = UV0;
 
-    frameFactorFog = float2(Color.z,0);
+    frameFactorFog = float2(Color.z,0.0f);
 #ifdef FOG
     frameFactorFog.y = dot(FogParams,pos);
 #endif

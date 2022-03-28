@@ -19,5 +19,5 @@ float4 main(
     color.y = colorY - colorU * 0.39173f - colorV * 0.81290f;
     color.z = colorY + colorU * 2.017f;
 
-    return float4( clamp( color.xyz, 0.f, 1.f ), 1.f );
+    return float4( clamp( color.xyz, 0.0f, 1.0f ), 1.0f );
 }

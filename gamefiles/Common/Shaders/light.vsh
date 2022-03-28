@@ -5,5 +5,5 @@ void main(
 
     float4 out gl_Position : POSITION
 ) {
-    gl_Position = mul(float4( Position, 1.0 ), ModelViewProjMatrix);
+    gl_Position = mul(float4( Position, 1.0f ), ModelViewProjMatrix);
 }

@@ -23,7 +23,7 @@ void main(
     float2 out Varying_ToneMap : TEXCOORD0,
     float4 out gl_Position : POSITION
 ) {
-    float4 pos = float4(VertexDenormalizationBox[0].xyz+Position.xyz*VertexDenormalizationBox[1].xyz,1.0);
+    float4 pos = float4(VertexDenormalizationBox[0].xyz+Position.xyz*VertexDenormalizationBox[1].xyz,1.0f);
 
 #ifdef SKINNING
     float4x4 SkinningMatrix;

@@ -67,12 +67,12 @@ void main(
 
     float4 out gl_Position : POSITION
 ) {
-    // Varying_ToneMap = 1.0;
+    // Varying_ToneMap = 1.0f;
 
     //----------------------------------------------
 
-    float4 pos = float4(Position, 1);
-    float4 nor = float4(Normal, 0);
+    float4 pos = float4(Position, 1.0f);
+    float4 nor = float4(Normal, 0.0f);
 
 #ifdef SKINNING
     float4x4 SkinningMatrix;
@@ -113,9 +113,9 @@ void main(
 #elif defined(TERRAIN_LIGHTMAP)
     Varying_LightmapUV = LightmapUVMulAdd.xy + LightmapUVMulAdd.zw;
 #elif defined(LIGHT_PROBES)
-    float3 probeX = (worldSpaceNormal.x >= 0.0) ? LightProbe[1].xyz : LightProbe[0].xyz ;
-    float3 probeY = (worldSpaceNormal.y >= 0.0) ? LightProbe[3].xyz : LightProbe[2].xyz ;
-    float3 probeZ = (worldSpaceNormal.z >= 0.0) ? LightProbe[5].xyz : LightProbe[4].xyz ;
+    float3 probeX = (worldSpaceNormal.x >= 0.0f) ? LightProbe[1].xyz : LightProbe[0].xyz ;
+    float3 probeY = (worldSpaceNormal.y >= 0.0f) ? LightProbe[3].xyz : LightProbe[2].xyz ;
+    float3 probeZ = (worldSpaceNormal.z >= 0.0f) ? LightProbe[5].xyz : LightProbe[4].xyz ;
 
     float3 probeCenterWS = LightProbeGradient[0].xyz;
     float3 gradX = LightProbeGradient[1].xyz;
@@ -131,7 +131,7 @@ void main(
     Varying_Diffuse = sqNrmWS.x * probeX + sqNrmWS.y * probeY + sqNrmWS.z * probeZ;
 #else
     float normalFactor = dot(normalize(worldSpaceNormal.xyz),VSHInvSunDiffuseDirection.xyz);
-    float3 diff = (VSHSunFrontColor.xyz * normalFactor) * 2.0;
+    float3 diff = (VSHSunFrontColor.xyz * normalFactor) * 2.0f;
     Varying_Color.xyz *= diff;
 #endif
 

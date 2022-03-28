@@ -40,10 +40,10 @@ void main(
     // float out Varying_ToneMap : TEXCOORD1,
     float4 out gl_Position : POSITION
 ) {
-    // Varying_ToneMap = 1.0;
+    // Varying_ToneMap = 1.0f;
 
-    float4 pos = float4(Position, 1.0);
-    float4 nor = float4(Normal, 0.0);
+    float4 pos = float4(Position, 1.0f);
+    float4 nor = float4(Normal, 0.0f);
 
 #ifdef SKINNING
     float4x4 SkinningMatrix;
@@ -52,7 +52,7 @@ void main(
     pos     = mul(SkinningMatrix, pos);
     nor     = mul(SkinningMatrix, nor);
 
-    // Varying_ToneMap = 2.0;
+    // Varying_ToneMap = 2.0f;
 #endif
 
     nor.w = 1.0;
@@ -74,7 +74,7 @@ void main(
 #ifdef LIGHTING
     float4 worldSpaceNormal = mul(nor, InvTModelMatrix);
     float normalFactor = dot(normalize(worldSpaceNormal.xyz),VSHInvSunDiffuseDirection.xyz);
-    float3 diff = (VSHSunFrontColor.xyz * normalFactor) * 2.0;
+    float3 diff = (VSHSunFrontColor.xyz * normalFactor) * 2.0f;
     Varying_Color.xyz *= diff;
 #endif
 

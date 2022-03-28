@@ -13,7 +13,7 @@ float4 main(
         discard;
 
 #ifdef FOG
-    float fogFactor = clamp(max(uvCutoffAndFog.y, GlobalFogColor.w), 0.f, 1.f);
+    float fogFactor = clamp(max(uvCutoffAndFog.y, GlobalFogColor.w), 0.0f, 1.0f);
     color.xyz = lerp(GlobalFogColor.xyz, color.xyz, uvCutoffAndFog.y);
 #endif
 
