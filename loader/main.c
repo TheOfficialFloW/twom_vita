@@ -325,12 +325,14 @@ extern void *__cxa_guard_acquire;
 extern void *__cxa_guard_release;
 
 uint32_t rumble_tick;
-void VibrateController(void *this, float a2, float a3, uint32_t a4) {
-  SceCtrlActuator handle;
-  handle.small = 100;
-  handle.large = 100;
-  sceCtrlSetActuator(1, &handle);
-  rumble_tick = sceKernelGetProcessTimeWide();
+void VibrateController(void *this, float strength1, float strength2, uint32_t a4) {
+  if (strength1 > 0.0f || strength2 > 0.0f) {
+    SceCtrlActuator handle;
+    handle.small = 100;
+    handle.large = 100;
+    sceCtrlSetActuator(1, &handle);
+    rumble_tick = sceKernelGetProcessTimeWide();
+  }
 }
 
 void StopRumble (void) {
@@ -363,14 +365,14 @@ void patch_game(void) {
   hook_addr(so_symbol(&twom_mod, "_ZN11GameConsole12PrintWarningEhPKcz"), (uintptr_t)ret0);
   hook_addr(so_symbol(&twom_mod, "_ZN11GameConsole10PrintErrorEhPKcz"), (uintptr_t)ret0);
 
-  _Znwj = (void *)so_symbol(&twom_mod, "_Znwj");
-  CountingSemaphore__Constructor = (void *)so_symbol(&twom_mod, "_ZN17CountingSemaphoreC2Ej");
-  BaseThread__BeginMessage = (void *)so_symbol(&twom_mod, "_ZN10BaseThread12BeginMessageEjj");
-  BaseThread__EndMessage = (void *)so_symbol(&twom_mod, "_ZN10BaseThread10EndMessageEv");
-  BaseThread___ThreadCode = (void *)so_symbol(&twom_mod, "_ZN10BaseThread11_ThreadCodeEv");
-  hook_addr(so_symbol(&twom_mod, "_ZN10BaseThread4InitEv"), (uintptr_t)BaseThread__Init);
-  hook_addr(so_symbol(&twom_mod, "_ZN10BaseThread11SetPriorityEi"), (uintptr_t)ret0);
-  hook_addr(so_symbol(&twom_mod, "_Z18GetCurrentThreadIdv"), (uintptr_t)GetCurrentThreadId);
+  //_Znwj = (void *)so_symbol(&twom_mod, "_Znwj");
+  //CountingSemaphore__Constructor = (void *)so_symbol(&twom_mod, "_ZN17CountingSemaphoreC2Ej");
+  //BaseThread__BeginMessage = (void *)so_symbol(&twom_mod, "_ZN10BaseThread12BeginMessageEjj");
+  //BaseThread__EndMessage = (void *)so_symbol(&twom_mod, "_ZN10BaseThread10EndMessageEv");
+  //BaseThread___ThreadCode = (void *)so_symbol(&twom_mod, "_ZN10BaseThread11_ThreadCodeEv");
+  //hook_addr(so_symbol(&twom_mod, "_ZN10BaseThread4InitEv"), (uintptr_t)BaseThread__Init);
+  //hook_addr(so_symbol(&twom_mod, "_ZN10BaseThread11SetPriorityEi"), (uintptr_t)ret0);
+  //hook_addr(so_symbol(&twom_mod, "_Z18GetCurrentThreadIdv"), (uintptr_t)GetCurrentThreadId);
   
   if (pstv_mode)
     hook_addr(so_symbol(&twom_mod, "_ZNK9GameInput18VibrateXControllerEffj"), (uintptr_t)VibrateController);
@@ -640,11 +642,11 @@ static so_default_dynlib default_dynlib[] = {
   { "pow", (uintptr_t)&pow },
   { "powf", (uintptr_t)&powf },
   { "printf", (uintptr_t)&printf },
-  // { "pthread_attr_destroy", (uintptr_t)&pthread_attr_destroy },
-  // { "pthread_attr_init", (uintptr_t)&pthread_attr_init },
-  // { "pthread_attr_setdetachstate", (uintptr_t)&pthread_attr_setdetachstate },
-  // { "pthread_create", (uintptr_t)&pthread_create },
-  // { "pthread_getschedparam", (uintptr_t)&pthread_getschedparam },
+  { "pthread_attr_destroy", (uintptr_t)&ret0 },
+  { "pthread_attr_init", (uintptr_t)&ret0 },
+  { "pthread_attr_setdetachstate", (uintptr_t)&ret0 },
+  { "pthread_create", (uintptr_t)&pthread_create_fake },
+  { "pthread_getschedparam", (uintptr_t)&pthread_getschedparam },
   { "pthread_getspecific", (uintptr_t)&pthread_getspecific },
   { "pthread_key_create", (uintptr_t)&pthread_key_create },
   { "pthread_key_delete", (uintptr_t)&pthread_key_delete },
@@ -657,8 +659,8 @@ static so_default_dynlib default_dynlib[] = {
   { "pthread_mutexattr_init", (uintptr_t)&pthread_mutexattr_init_fake },
   { "pthread_mutexattr_settype", (uintptr_t)&pthread_mutexattr_settype_fake },
   { "pthread_once", (uintptr_t)&pthread_once_fake },
-  // { "pthread_self", (uintptr_t)&pthread_self },
-  // { "pthread_setschedparam", (uintptr_t)&pthread_setschedparam },
+  { "pthread_self", (uintptr_t)&pthread_self },
+  { "pthread_setschedparam", (uintptr_t)&pthread_setschedparam },
   { "pthread_setspecific", (uintptr_t)&pthread_setspecific },
   { "putc", (uintptr_t)&putc },
   { "putwc", (uintptr_t)&putwc },
@@ -1065,7 +1067,7 @@ int main(int argc, char *argv[]) {
   so_initialize(&twom_mod);
 
   vglSetupRuntimeShaderCompiler(SHARK_OPT_UNSAFE, SHARK_ENABLE, SHARK_ENABLE, SHARK_ENABLE);
-  vglSetupGarbageCollector(127, 0x40000);
+  vglSetupGarbageCollector(127, 0x20000);
   vglInitExtended(0, SCREEN_W, SCREEN_H, MEMORY_VITAGL_THRESHOLD_MB * 1024 * 1024, SCE_GXM_MULTISAMPLE_4X);
 
   int (* Java_com_android_Game11Bits_GameLib_initOBBFile)(void *env, void *obj, const char *file, int filesize) = (void *)so_symbol(&twom_mod, "Java_com_android_Game11Bits_GameLib_initOBBFile");
@@ -1097,7 +1099,7 @@ int main(int argc, char *argv[]) {
   Java_com_android_Game11Bits_GameLib_initOBBFile(fake_env, NULL, DATA_PATH "/main.obb", st.st_size);
   Java_com_android_Game11Bits_GameLib_init(fake_env, (void *)0x41414141, "apk", DATA_PATH, NULL, SCREEN_W, SCREEN_H, 0);
 
-  SceUID ctrl_thid = sceKernelCreateThread("ctrl_thread", (SceKernelThreadEntry)ctrl_thread, 127, 128 * 1024, 0, 0x40000, NULL);
+  SceUID ctrl_thid = sceKernelCreateThread("ctrl_thread", (SceKernelThreadEntry)ctrl_thread, 0x10000100, 128 * 1024, 0, 0, NULL);
   sceKernelStartThread(ctrl_thid, 0, NULL);
 
   return sceKernelExitDeleteThread(0);
