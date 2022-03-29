@@ -375,7 +375,7 @@ void patch_game(void) {
   //hook_addr(so_symbol(&twom_mod, "_Z18GetCurrentThreadIdv"), (uintptr_t)GetCurrentThreadId);
   
   if (pstv_mode)
-    hook_addr(so_symbol(&twom_mod, "_ZNK9GameInput18VibrateXControllerEffj"), (uintptr_t)VibrateController);
+    hook_addr(so_symbol(&twom_mod, "_ZNK4Game18VibrateXControllerEffj"), (uintptr_t)VibrateController);
 }
 
 extern void *__aeabi_atexit;
