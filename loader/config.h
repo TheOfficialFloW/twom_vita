@@ -6,7 +6,7 @@
 #define LOAD_ADDRESS 0x98000000
 
 #define MEMORY_NEWLIB_MB 240
-#define MEMORY_VITAGL_THRESHOLD_MB 8
+#define MEMORY_VITAGL_THRESHOLD_MB 12
 
 #define DATA_PATH "ux0:data/twom"
 #define SO_PATH DATA_PATH "/" "libAndroidGame.so"
