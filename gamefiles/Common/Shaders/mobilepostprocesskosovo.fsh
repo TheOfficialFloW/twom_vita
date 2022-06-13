@@ -83,19 +83,19 @@ float4 main(
     color.xyz *= dist * dist;
 
 
-    // Apply low spec devices color multiplicator
-#ifndef GLOW_BLUR_CLAMP
-    color.xyz *= UserPSHParams[4].a;
-#else
-    color.xyz *= 2.0f;
-#endif
+	// Apply low spec devices color multiplicator
+	#ifndef GLOW_BLUR_CLAMP
+		color.xyz *= UserPSHParams[4].a;
+    #else
+		color.xyz *= 2.0f;
+	#endif
 
-    float4 gl_FragColor = float4(color.xyz,1.0f);
-    // Android TV no srgb finalization
-#ifndef GLOW_BLUR_CLAMP
-#if defined(FINAL_TARGET_NO_SRGB)
-    gl_FragColor.xyz = sqrt(gl_FragColor.xyz);
-#endif
-#endif
+	float4 gl_FragColor = float4(color.xyz,1.0f);
+	// Android TV no srgb finalization
+	#ifndef GLOW_BLUR_CLAMP
+	#if defined(FINAL_TARGET_NO_SRGB)
+		gl_FragColor.xyz = sqrt(gl_FragColor.xyz);
+	#endif
+	#endif
     return gl_FragColor;
 }

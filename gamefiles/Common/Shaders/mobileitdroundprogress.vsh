@@ -15,7 +15,8 @@ void main(
     float2 out uvCutoffAndFog : TEXCOORD1,
     float4 out gl_Position : POSITION
 ) {
-    float3 posWS = mul(Position, float3x3(ModelMatrix));
+    float4 pos4 = float4(Position,1.0f);
+    float3 posWS = (mul(pos4, ModelMatrix)).xyz;
 
     gl_Position=mul(float4(posWS,1.0f), ViewProjMatrix);
     uv0Varying = UV0 * MappingTransform.xy + MappingTransform.zw;
