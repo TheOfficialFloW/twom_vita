@@ -15,11 +15,11 @@ void main(
 #endif
     float4 out gl_Position : POSITION
 ) {
-    gl_Position = mul(float4(Position,1.0f), ModelViewProjMatrix);
+    gl_Position = mul(float4(Position,1.f), ModelViewProjMatrix);
 
     colorVarying=DiffuseColor;
 #ifdef VERTEX_COLOR
-    colorVarying*=Color;
+	colorVarying*=Color;
 #endif
 #if defined(TEXTURE)
     uv0Varying=UV0*MappingTransform.xy+MappingTransform.zw;

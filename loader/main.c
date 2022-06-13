@@ -6,17 +6,7 @@
  * of the MIT license.  See the LICENSE file for details.
  */
 
-#include <psp2/io/dirent.h>
-#include <psp2/io/fcntl.h>
-#include <psp2/kernel/clib.h>
-#include <psp2/kernel/processmgr.h>
-#include <psp2/kernel/threadmgr.h>
-#include <psp2/appmgr.h>
-#include <psp2/apputil.h>
-#include <psp2/ctrl.h>
-#include <psp2/power.h>
-#include <psp2/rtc.h>
-#include <psp2/touch.h>
+#include <vitasdk.h>
 #include <kubridge.h>
 #include <vitashark.h>
 #include <vitaGL.h>
@@ -72,6 +62,14 @@ void *__wrap_memmove(void *dest, const void *src, size_t n) {
 
 void *__wrap_memset(void *s, int c, size_t n) {
   return sceClibMemset(s, c, n);
+}
+
+void *sceClibMemclr(void *dst, SceSize len) {
+	return sceClibMemset(dst, 0, len);
+}
+
+void *sceClibMemset2(void *dst, SceSize len, int ch) {
+	return sceClibMemset(dst, ch, len);
 }
 
 void loadConfig(void) {
@@ -135,7 +133,7 @@ int ret1(void) {
   return 1;
 }
 
-int clock_gettime(int clk_ik, struct timespec *t) {
+int clock_gettime_hook(int clk_ik, struct timespec *t) {
   struct timeval now;
   int rv = gettimeofday(&now, NULL);
   if (rv)
@@ -225,7 +223,7 @@ int sem_wait_fake(int *uid) {
 
 int sem_timedwait_fake(int *uid, const struct timespec *abstime) {
   struct timespec now = {0};
-  clock_gettime(0, &now);
+  clock_gettime_hook(0, &now);
   SceUInt timeout = (abstime->tv_sec * 1000 * 1000 + abstime->tv_nsec / 1000) - (now.tv_sec * 1000 * 1000 + now.tv_nsec / 1000);
   if (timeout < 0)
     timeout = 0;
@@ -389,6 +387,18 @@ extern void *__cxa_atexit;
 extern void *__cxa_finalize;
 extern void *__gnu_unwind_frame;
 extern void *__stack_chk_fail;
+extern void *__aeabi_memclr;
+extern void *__aeabi_memclr4;
+extern void *__aeabi_memclr8;
+extern void *__aeabi_memcpy4;
+extern void *__aeabi_memcpy8;
+extern void *__aeabi_memmove4;
+extern void *__aeabi_memmove8;
+extern void *__aeabi_memcpy;
+extern void *__aeabi_memmove;
+extern void *__aeabi_memset;
+extern void *__aeabi_memset4;
+extern void *__aeabi_memset8;
 
 static int __stack_chk_guard_fake = 0x42424242;
 
@@ -415,6 +425,26 @@ void glCompressedTexImage2DHook(GLenum target, GLint level, GLenum format, GLsiz
     glCompressedTexImage2D(target, level, format, width, height, border, imageSize, data);
 }
 
+char *__strrchr_chk(const char *p, int ch, size_t s_len) {
+  return strrchr(p, ch);
+}
+
+char *__strchr_chk(const char* p, int ch, size_t s_len) {
+  return strchr(p, ch);
+}
+
+size_t __strlen_chk(const char *s, size_t s_len) {
+  return strlen(s);
+}
+
+char *__strcpy_chk_hook (char *dest, const char *src, size_t dest_len) {
+  return strcpy(dest, src);
+}
+
+char* __strcat_chk(char *dest, const char *src, size_t dest_buf_size) {
+  return strcat(dest, src);
+}
+
 static so_default_dynlib default_dynlib[] = {
   // { "ANativeWindow_release", (uintptr_t)&ANativeWindow_release },
   // { "ANativeWindow_setBuffersGeometry", (uintptr_t)&ANativeWindow_setBuffersGeometry },
@@ -433,6 +463,17 @@ static so_default_dynlib default_dynlib[] = {
   { "__aeabi_idiv", (uintptr_t)&__aeabi_idiv },
   { "__aeabi_idivmod", (uintptr_t)&__aeabi_idivmod },
   { "__aeabi_ldivmod", (uintptr_t)&__aeabi_ldivmod },
+  { "__aeabi_memclr", (uintptr_t)&sceClibMemclr },
+  { "__aeabi_memclr4", (uintptr_t)&sceClibMemclr },
+  { "__aeabi_memclr8", (uintptr_t)&sceClibMemclr },
+  { "__aeabi_memcpy4", (uintptr_t)&sceClibMemcpy },
+  { "__aeabi_memcpy8", (uintptr_t)&sceClibMemcpy },
+  { "__aeabi_memmove4", (uintptr_t)&sceClibMemmove },
+  { "__aeabi_memmove8", (uintptr_t)&sceClibMemmove },
+  { "__aeabi_memcpy", (uintptr_t)&sceClibMemcpy },
+  { "__aeabi_memmove", (uintptr_t)&sceClibMemmove },
+  { "__aeabi_memset", (uintptr_t)&sceClibMemset2 },
+  { "__aeabi_memset4", (uintptr_t)&sceClibMemset2 },
   { "__aeabi_uidiv", (uintptr_t)&__aeabi_uidiv },
   { "__aeabi_uidivmod", (uintptr_t)&__aeabi_uidivmod },
   { "__aeabi_uldivmod", (uintptr_t)&__aeabi_uldivmod },
@@ -447,6 +488,10 @@ static so_default_dynlib default_dynlib[] = {
   { "__sF", (uintptr_t)&__sF_fake },
   { "__stack_chk_fail", (uintptr_t)&__stack_chk_fail },
   { "__stack_chk_guard", (uintptr_t)&__stack_chk_guard_fake },
+  { "__strchr_chk", (uintptr_t)&__strchr_chk },
+  { "__strcat_chk", (uintptr_t)&__strcat_chk },
+  { "__strcpy_chk", (uintptr_t)&__strcpy_chk_hook },
+  { "__strlen_chk", (uintptr_t)&__strlen_chk },
   { "_ctype_", (uintptr_t)&__ctype_ },
   { "abort", (uintptr_t)&abort },
   // { "accept", (uintptr_t)&accept },
@@ -495,7 +540,7 @@ static so_default_dynlib default_dynlib[] = {
   { "ceil", (uintptr_t)&ceil },
   { "ceilf", (uintptr_t)&ceilf },
   { "clearerr", (uintptr_t)&clearerr },
-  { "clock_gettime", (uintptr_t)&clock_gettime },
+  { "clock_gettime", (uintptr_t)&clock_gettime_hook },
   // { "close", (uintptr_t)&close },
   { "cos", (uintptr_t)&cos },
   { "cosf", (uintptr_t)&cosf },
@@ -544,7 +589,7 @@ static so_default_dynlib default_dynlib[] = {
   { "glBindAttribLocation", (uintptr_t)&glBindAttribLocation },
   { "glBindBuffer", (uintptr_t)&glBindBuffer },
   { "glBindFramebuffer", (uintptr_t)&glBindFramebuffer },
-  { "glBindRenderbuffer", (uintptr_t)&ret0 },
+  { "glBindRenderbuffer", (uintptr_t)&glBindRenderbuffer },
   { "glBindTexture", (uintptr_t)&glBindTexture },
   { "glBlendEquation", (uintptr_t)&glBlendEquation },
   { "glBlendFunc", (uintptr_t)&glBlendFunc },
@@ -564,7 +609,7 @@ static so_default_dynlib default_dynlib[] = {
   { "glDeleteBuffers", (uintptr_t)&glDeleteBuffers },
   { "glDeleteFramebuffers", (uintptr_t)&glDeleteFramebuffers },
   { "glDeleteProgram", (uintptr_t)&glDeleteProgram },
-  { "glDeleteRenderbuffers", (uintptr_t)&ret0 },
+  { "glDeleteRenderbuffers", (uintptr_t)&glDeleteRenderbuffers },
   { "glDeleteShader", (uintptr_t)&glDeleteShader },
   { "glDeleteTextures", (uintptr_t)&glDeleteTextures },
   { "glDepthFunc", (uintptr_t)&glDepthFunc },
@@ -576,11 +621,11 @@ static so_default_dynlib default_dynlib[] = {
   { "glEnable", (uintptr_t)&glEnable },
   { "glEnableVertexAttribArray", (uintptr_t)&glEnableVertexAttribArray },
   { "glFinish", (uintptr_t)&glFinish },
-  { "glFramebufferRenderbuffer", (uintptr_t)&ret0 },
+  { "glFramebufferRenderbuffer", (uintptr_t)&glFramebufferRenderbuffer },
   { "glFramebufferTexture2D", (uintptr_t)&glFramebufferTexture2D },
   { "glGenBuffers", (uintptr_t)&glGenBuffers },
   { "glGenFramebuffers", (uintptr_t)&glGenFramebuffers },
-  { "glGenRenderbuffers", (uintptr_t)&ret0 },
+  { "glGenRenderbuffers", (uintptr_t)&glGenRenderbuffers },
   { "glGenTextures", (uintptr_t)&glGenTextures },
   { "glGetError", (uintptr_t)&glGetError },
   { "glGetIntegerv", (uintptr_t)&glGetIntegerv },
@@ -593,7 +638,7 @@ static so_default_dynlib default_dynlib[] = {
   { "glGetUniformLocation", (uintptr_t)&glGetUniformLocation },
   { "glLinkProgram", (uintptr_t)&glLinkProgram },
   { "glPolygonOffset", (uintptr_t)&glPolygonOffset },
-  { "glRenderbufferStorage", (uintptr_t)&ret0 },
+  { "glRenderbufferStorage", (uintptr_t)&glRenderbufferStorage },
   { "glScissor", (uintptr_t)&glScissor },
   { "glShaderSource", (uintptr_t)&glShaderSource },
   { "glStencilFunc", (uintptr_t)&glStencilFunc },
@@ -632,7 +677,7 @@ static so_default_dynlib default_dynlib[] = {
   { "malloc", (uintptr_t)&malloc },
   { "mbrtowc", (uintptr_t)&mbrtowc },
   { "memchr", (uintptr_t)&sceClibMemchr },
-  { "memcmp", (uintptr_t)&sceClibMemcmp },
+  { "memcmp", (uintptr_t)&memcmp },
   { "memcpy", (uintptr_t)&sceClibMemcpy },
   { "memmove", (uintptr_t)&sceClibMemmove },
   { "memset", (uintptr_t)&sceClibMemset },
@@ -665,6 +710,7 @@ static so_default_dynlib default_dynlib[] = {
   { "putc", (uintptr_t)&putc },
   { "putwc", (uintptr_t)&putwc },
   { "qsort", (uintptr_t)&qsort },
+  { "rand", (uintptr_t)&rand },
   // { "read", (uintptr_t)&read },
   { "realloc", (uintptr_t)&realloc },
   // { "recv", (uintptr_t)&recv },
@@ -688,6 +734,7 @@ static so_default_dynlib default_dynlib[] = {
   { "sprintf", (uintptr_t)&sprintf },
   { "sqrt", (uintptr_t)&sqrt },
   { "sqrtf", (uintptr_t)&sqrtf },
+  { "srand", (uintptr_t)&srand },
   { "srand48", (uintptr_t)&srand48 },
   { "sscanf", (uintptr_t)&sscanf },
   { "stat", (uintptr_t)&stat_hook },
@@ -882,7 +929,7 @@ static int rear_mapping[] = {
   AKEYCODE_BUTTON_L1
 };
 
-int ctrl_thread(SceSize args, void *argp) {
+void *ctrl_thread(void *argp) {
   int (* Java_com_android_Game11Bits_GameLib_touchDown)(void *env, void *obj, int id, float x, float y) = (void *)so_symbol(&twom_mod, "Java_com_android_Game11Bits_GameLib_touchDown");
   int (* Java_com_android_Game11Bits_GameLib_touchUp)(void *env, void *obj, int id, float x, float y) = (void *)so_symbol(&twom_mod, "Java_com_android_Game11Bits_GameLib_touchUp");
   int (* Java_com_android_Game11Bits_GameLib_touchMove)(void *env, void *obj, int id, float x, float y) = (void *)so_symbol(&twom_mod, "Java_com_android_Game11Bits_GameLib_touchMove");
@@ -1055,7 +1102,7 @@ int main(int argc, char *argv[]) {
       stories_mode = 1;
   }
 
-  if (so_load(&twom_mod, stories_mode ? SO_DLC_PATH : SO_PATH, LOAD_ADDRESS) < 0)
+  if (so_file_load(&twom_mod, stories_mode ? SO_DLC_PATH : SO_PATH, LOAD_ADDRESS) < 0)
     fatal_error("Error could not load %s.", stories_mode ? SO_DLC_PATH : SO_PATH);
 
   so_relocate(&twom_mod);
@@ -1098,9 +1145,11 @@ int main(int argc, char *argv[]) {
   stat(DATA_PATH "/main.obb", &st);
   Java_com_android_Game11Bits_GameLib_initOBBFile(fake_env, NULL, DATA_PATH "/main.obb", st.st_size);
   Java_com_android_Game11Bits_GameLib_init(fake_env, (void *)0x41414141, "apk", DATA_PATH, NULL, SCREEN_W, SCREEN_H, 0);
-
-  SceUID ctrl_thid = sceKernelCreateThread("ctrl_thread", (SceKernelThreadEntry)ctrl_thread, 0x10000100, 128 * 1024, 0, 0, NULL);
-  sceKernelStartThread(ctrl_thid, 0, NULL);
+  
+  pthread_t t;
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_create(&t, &attr, ctrl_thread, NULL);
 
   return sceKernelExitDeleteThread(0);
 }

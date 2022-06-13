@@ -18,7 +18,7 @@ float4 main(
 #endif
 
 #if defined(FINAL_TARGET_NO_SRGB)
-    color.xyz = sqrt(color.xyz);
+	color.xyz = sqrt(color.xyz);
 #endif
     return color;
 }

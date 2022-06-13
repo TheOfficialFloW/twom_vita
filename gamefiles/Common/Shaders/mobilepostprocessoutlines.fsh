@@ -7,16 +7,19 @@ uniform sampler2D Texture2;
 float4 main(
     float4 uv0Varying : TEXCOORD0
 ) {
-    float3 one=float3(1.0f,1.0f,1.0f);
+    float4 gl_FragColor = float4(0, 0, 0, 0);
+
+    float3 one=float3(1.0,1.0,1.0);
 
     float3 outline0=tex2D(Texture2,uv0Varying.xy).xyz;
-    float3 outline1=tex2D(Texture2,uv0Varying.zw).xyz;
+	float3 outline1=tex2D(Texture2,uv0Varying.zw).xyz;
     float3 outlineSum=outline0+outline1;
-    float3 finalOutline=min(one,outlineSum)*min(one,float3(2.0f,2.0f,2.0f)-outlineSum);
+	float3 finalOutline=min(one,outlineSum)*min(one,float3(2.0,2.0,2.0)-outlineSum);
 
-    float4 color = HostileColor*finalOutline.x
-                 + FriendlyColor*finalOutline.y
-                 + NeutralColor*finalOutline.z;
+	float4 color = HostileColor*finalOutline.x
+                       + FriendlyColor*finalOutline.y
+                       + NeutralColor*finalOutline.z;
 
-    return color;
+	gl_FragColor=color;
+    return gl_FragColor;
 }
