@@ -23,6 +23,8 @@ static uint16_t ime_initial_text_utf16[SCE_IME_DIALOG_MAX_TEXT_LENGTH];
 static uint16_t ime_input_text_utf16[SCE_IME_DIALOG_MAX_TEXT_LENGTH + 1];
 static uint8_t ime_input_text_utf8[SCE_IME_DIALOG_MAX_TEXT_LENGTH + 1];
 
+extern int vgl_inited;
+
 void utf16_to_utf8(const uint16_t *src, uint8_t *dst) {
   for (int i = 0; src[i]; i++) {
     if ((src[i] & 0xFF80) == 0) {
@@ -132,8 +134,10 @@ void fatal_error(const char *fmt, ...) {
   vsnprintf(string, sizeof(string), fmt, list);
   va_end(list);
 
-  vglInit(0);
+  if (!vgl_inited)
+    vglInit(0);
 
+  printf(string);
   init_msg_dialog(string);
 
   while (!get_msg_dialog_result())

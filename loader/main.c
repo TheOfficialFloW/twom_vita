@@ -42,6 +42,7 @@
 
 int pstv_mode = 0;
 int enable_dlcs = 0;
+int vgl_inited = 0;
 
 int _newlib_heap_size_user = MEMORY_NEWLIB_MB * 1024 * 1024;
 
@@ -244,12 +245,8 @@ void DeteremineSystemMemory(void) {
   *TotalMemeorySizeInMB = MEMORY_NEWLIB_MB;
 }
 
-int FileSystem__IsAbsolutePath(void *this, const char *path) {
-  return (strncmp(path, "ux0:", 4) == 0) || (strncmp(path, "app0:", 5) == 0);
-}
-
 char *ShaderManager__GetShaderPath(void) {
-  return "app0:/Common/Shaders";
+  return "/Common/Shaders";
 }
 
 void PresentGLContext(void) {
@@ -341,11 +338,49 @@ void StopRumble (void) {
   rumble_tick = 0;
 }
 
+/*
+void GameConsolePrint(void *this, uint8_t a2, uint8_t a3, const char *text, ...) {
+	va_list list;
+	static char string[0x8000];
+
+	va_start(list, text);
+	vsprintf(string, text, list);
+	va_end(list);
+
+	printf(string);
+	printf("\n");
+	return 0;
+}
+
+void GameConsoleWarn(void *this, uint8_t a2, const char *text, ...) {
+	va_list list;
+	static char string[0x8000];
+
+	va_start(list, text);
+	vsprintf(string, text, list);
+	va_end(list);
+	
+	printf("Warning: %s\n", string);
+	return 0;
+}
+
+void GameConsoleErr(void *this, uint8_t a2, const char *text, ...) {
+	va_list list;
+	static char string[0x8000];
+
+	va_start(list, text);
+	vsprintf(string, text, list);
+	va_end(list);
+	
+	printf("Error: %s\n", string);
+	return 0;
+}
+*/
+
 void patch_game(void) {
   hook_addr(so_symbol(&twom_mod, "__cxa_guard_acquire"), (uintptr_t)&__cxa_guard_acquire);
   hook_addr(so_symbol(&twom_mod, "__cxa_guard_release"), (uintptr_t)&__cxa_guard_release);
 
-  hook_addr(so_symbol(&twom_mod, "_ZN10FileSystem14IsAbsolutePathEPKc"), (uintptr_t)FileSystem__IsAbsolutePath);
   hook_addr(so_symbol(&twom_mod, "_ZN13ShaderManager13GetShaderPathEv"), (uintptr_t)ShaderManager__GetShaderPath);
 
   hook_addr(so_symbol(&twom_mod, "_Z17GetApkAssetOffsetPKcRj"), (uintptr_t)ret0);
@@ -441,8 +476,51 @@ char *__strcpy_chk_hook (char *dest, const char *src, size_t dest_len) {
   return strcpy(dest, src);
 }
 
-char* __strcat_chk(char *dest, const char *src, size_t dest_buf_size) {
+char *__strcat_chk(char *dest, const char *src, size_t dest_buf_size) {
   return strcat(dest, src);
+}
+
+char *__strncat_chk(char *s1, const char *s2, size_t n, size_t s1len) {
+  return strncat(s1, s2, n);
+}
+
+char* __strncpy_chk2(char *s1, const char *s2, size_t n, size_t ss, size_t dd) {
+  return strncpy(s1, s2, n);	
+}
+
+char* __strncpy_chk(char *s1, const char *s2, size_t n, size_t l) {
+  return strncpy(s1, s2, n);	
+}
+
+void *__memcpy_chk(void *dest, const void *src, size_t len, size_t destlen) {
+  return sceClibMemcpy(dest, src, len);
+}
+
+int __vsprintf_chk(char *s, int flag, size_t slen, const char *format, va_list args) {
+	return vsprintf(s, format, args);
+}
+
+void *vglMallocAligned(uint32_t size) {
+  return vglMemalign(16, size);
+}
+
+void *vglReallocAligned(void *ptr, size_t size) {
+  void *r = vglMallocAligned(size);
+  if (ptr && r) {
+    sceClibMemcpy(r, ptr, vglMallocUsableSize(ptr));
+    vglFree(ptr);
+  }
+  
+  return r;
+}
+
+FILE *fopen_hook(char *fname, char *mode) {
+  if (!strncmp(fname, "/Common/Shaders/", 16)) {
+    char real_fname[256];
+	sprintf(real_fname, "app0:%s", fname);
+	return fopen(real_fname, mode);
+  }
+  return fopen(fname, mode);
 }
 
 static so_default_dynlib default_dynlib[] = {
@@ -474,6 +552,7 @@ static so_default_dynlib default_dynlib[] = {
   { "__aeabi_memmove", (uintptr_t)&sceClibMemmove },
   { "__aeabi_memset", (uintptr_t)&sceClibMemset2 },
   { "__aeabi_memset4", (uintptr_t)&sceClibMemset2 },
+  { "__aeabi_memset8", (uintptr_t)&sceClibMemset2 },
   { "__aeabi_uidiv", (uintptr_t)&__aeabi_uidiv },
   { "__aeabi_uidivmod", (uintptr_t)&__aeabi_uidivmod },
   { "__aeabi_uldivmod", (uintptr_t)&__aeabi_uldivmod },
@@ -490,8 +569,13 @@ static so_default_dynlib default_dynlib[] = {
   { "__stack_chk_guard", (uintptr_t)&__stack_chk_guard_fake },
   { "__strchr_chk", (uintptr_t)&__strchr_chk },
   { "__strcat_chk", (uintptr_t)&__strcat_chk },
+  { "__strncat_chk", (uintptr_t)&__strncat_chk },
   { "__strcpy_chk", (uintptr_t)&__strcpy_chk_hook },
+  { "__strncpy_chk", (uintptr_t)&__strncpy_chk },
+  { "__strncpy_chk2", (uintptr_t)&__strncpy_chk2 },
   { "__strlen_chk", (uintptr_t)&__strlen_chk },
+  { "__memcpy_chk", (uintptr_t)&__memcpy_chk },
+  { "__vsprintf_chk", (uintptr_t)&__vsprintf_chk },
   { "_ctype_", (uintptr_t)&__ctype_ },
   { "abort", (uintptr_t)&abort },
   // { "accept", (uintptr_t)&accept },
@@ -571,12 +655,12 @@ static so_default_dynlib default_dynlib[] = {
   { "floorf", (uintptr_t)&floorf },
   { "fmod", (uintptr_t)&fmod },
   { "fmodf", (uintptr_t)&fmodf },
-  { "fopen", (uintptr_t)&fopen },
+  { "fopen", (uintptr_t)&fopen_hook },
   { "fprintf", (uintptr_t)&fprintf },
   { "fputc", (uintptr_t)&fputc },
   { "fputs", (uintptr_t)&fputs },
   { "fread", (uintptr_t)&fread },
-  { "free", (uintptr_t)&free },
+  { "free", (uintptr_t)&vglFree },
   { "frexp", (uintptr_t)&frexp },
   { "fseek", (uintptr_t)&fseek },
   { "fstat", (uintptr_t)&fstat },
@@ -662,6 +746,10 @@ static so_default_dynlib default_dynlib[] = {
   { "ispunct", (uintptr_t)&ispunct },
   { "isspace", (uintptr_t)&isspace },
   { "isupper", (uintptr_t)&isupper },
+  { "iswalpha", (uintptr_t)&iswalpha },
+  { "iswdigit", (uintptr_t)&iswdigit },
+  { "iswpunct", (uintptr_t)&iswpunct },
+  { "iswupper", (uintptr_t)&iswupper },
   { "iswctype", (uintptr_t)&iswctype },
   { "isxdigit", (uintptr_t)&isxdigit },
   { "ldexp", (uintptr_t)&ldexp },
@@ -674,7 +762,8 @@ static so_default_dynlib default_dynlib[] = {
   { "lrint", (uintptr_t)&lrint },
   { "lrintf", (uintptr_t)&lrintf },
   { "lseek", (uintptr_t)&lseek },
-  { "malloc", (uintptr_t)&malloc },
+  { "malloc", (uintptr_t)&vglMallocAligned },
+  { "mbtowc", (uintptr_t)&mbtowc },
   { "mbrtowc", (uintptr_t)&mbrtowc },
   { "memchr", (uintptr_t)&sceClibMemchr },
   { "memcmp", (uintptr_t)&memcmp },
@@ -712,7 +801,7 @@ static so_default_dynlib default_dynlib[] = {
   { "qsort", (uintptr_t)&qsort },
   { "rand", (uintptr_t)&rand },
   // { "read", (uintptr_t)&read },
-  { "realloc", (uintptr_t)&realloc },
+  { "realloc", (uintptr_t)&vglReallocAligned },
   // { "recv", (uintptr_t)&recv },
   { "rint", (uintptr_t)&rint },
   { "sem_destroy", (uintptr_t)&sem_destroy_fake },
@@ -727,6 +816,8 @@ static so_default_dynlib default_dynlib[] = {
   // { "setsockopt", (uintptr_t)&setsockopt },
   { "setvbuf", (uintptr_t)&setvbuf },
   { "sin", (uintptr_t)&sin },
+  { "sincos", (uintptr_t)&sincos },
+  { "sincosf", (uintptr_t)&sincosf },
   { "sinf", (uintptr_t)&sinf },
   { "sinh", (uintptr_t)&sinh },
   { "snprintf", (uintptr_t)&snprintf },
@@ -757,7 +848,9 @@ static so_default_dynlib default_dynlib[] = {
   { "strstr", (uintptr_t)&sceClibStrstr },
   { "strtod", (uintptr_t)&strtod },
   { "strtol", (uintptr_t)&strtol },
+  { "strtoll", (uintptr_t)&strtoll },
   { "strtoul", (uintptr_t)&strtoul },
+  { "strtoull", (uintptr_t)&strtoull },
   { "strxfrm", (uintptr_t)&strxfrm },
   // { "syscall", (uintptr_t)&syscall },
   { "tan", (uintptr_t)&tan },
@@ -780,6 +873,12 @@ static so_default_dynlib default_dynlib[] = {
   { "wcslen", (uintptr_t)&wcslen },
   { "wcsxfrm", (uintptr_t)&wcsxfrm },
   { "wctob", (uintptr_t)&wctob },
+  { "wcstod", (uintptr_t)&wcstod },
+  { "wcstof", (uintptr_t)&wcstof },
+  { "wcstol", (uintptr_t)&wcstol },
+  { "wcstoul", (uintptr_t)&wcstoul },
+  { "wcstoll", (uintptr_t)&wcstoll },
+  { "wcstoull", (uintptr_t)&wcstoull },
   { "wctype", (uintptr_t)&wctype },
   { "wmemchr", (uintptr_t)&wmemchr },
   { "wmemcmp", (uintptr_t)&wmemcmp },
@@ -1069,7 +1168,39 @@ void *ctrl_thread(void *argp) {
   return 0;
 }
 
+/*
+KuKernelAbortHandler coredumper;
+void abort_handler(KuKernelAbortContext *ctx) {
+	printf("Crash Detected!!! (Abort Type: 0x%08X)\n", ctx->abortType);
+	printf("-----------------\n");
+	printf("PC: 0x%08X (Instr: 0x%08X)\n", ctx->pc, *(uint32_t*)ctx->pc);
+	printf("LR: 0x%08X\n", ctx->lr);
+	printf("SP: 0x%08X\n", ctx->sp);
+	printf("-----------------\n");
+	printf("REGISTERS:\n");
+	uint32_t *registers = (uint32_t *)ctx;
+	for (int i = 0; i < 13; i++) {
+		printf("R%d: 0x%08X\n", i, registers[i]);	
+	}
+	printf("-----------------\n");
+	printf("VFP REGISTERS:\n");
+	for (int i = 0; i < 32; i++) {
+		printf("D%d: 0x%016llX\n", i, ctx->vfpRegisters[i]);	
+	}
+	printf("-----------------\n");
+	printf("SPSR: 0x%08X\n", ctx->SPSR);
+	printf("FPSCR: 0x%08X\n", ctx->FPSCR);
+	printf("FPEXC: 0x%08X\n", ctx->FPEXC);
+	printf("FSR: 0x%08X\n", ctx->FSR);
+	printf("FAR: 0x%08X\n", ctx->FAR);
+	
+	coredumper(ctx);
+}
+*/
+
 int main(int argc, char *argv[]) {
+  //kuKernelRegisterAbortHandler(abort_handler, &coredumper);
+
   sceCtrlSetSamplingModeExt(SCE_CTRL_MODE_ANALOG_WIDE);
   sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
   sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK, SCE_TOUCH_SAMPLING_STATE_START);
@@ -1116,6 +1247,7 @@ int main(int argc, char *argv[]) {
   vglSetupRuntimeShaderCompiler(SHARK_OPT_UNSAFE, SHARK_ENABLE, SHARK_ENABLE, SHARK_ENABLE);
   vglSetupGarbageCollector(127, 0x20000);
   vglInitExtended(0, SCREEN_W, SCREEN_H, MEMORY_VITAGL_THRESHOLD_MB * 1024 * 1024, SCE_GXM_MULTISAMPLE_4X);
+  vgl_inited = 1;
 
   int (* Java_com_android_Game11Bits_GameLib_initOBBFile)(void *env, void *obj, const char *file, int filesize) = (void *)so_symbol(&twom_mod, "Java_com_android_Game11Bits_GameLib_initOBBFile");
   int (* Java_com_android_Game11Bits_GameLib_init)(void *env, void *obj, const char *ApkFilePath, const char *StorageFilePath, const char *CacheFilePath, int resX, int resY, int sdkVersion) = (void *)so_symbol(&twom_mod, "Java_com_android_Game11Bits_GameLib_init");
