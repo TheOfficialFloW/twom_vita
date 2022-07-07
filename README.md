@@ -5,6 +5,7 @@
 This is a wrapper/port of <b>This War of Mine</b> and <b>This War Of Mine: Stories - Father's Promise</b> for the *PS Vita*.
 
 The port works by loading the official Android ARMv7 executables in memory, resolving their imports with native functions and patching them in order to properly run.
+By doing so, it's basically as if we emulate a minimalist Android environment in which we run natively the executable as is.
 
 ## Notes
 
